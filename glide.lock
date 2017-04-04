@@ -1,5 +1,5 @@
-hash: 5007bd763fd44992fbceb8a7cb49720357ce0395e3b1120463ae455dc613b526
-updated: 2017-04-11T14:18:56.438942868-05:00
+hash: 79195fe179749d1601a3e95eefe73ac40ec87d7f80e1cf1aa9c34d14a493e59f
+updated: 2017-04-11T14:23:16.536117641-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -125,6 +125,8 @@ imports:
   version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
+- name: github.com/meatballhat/negroni-logrus
+  version: 7c570a907cfc69cdc004ad506c6f5e234815b936
 - name: github.com/mitchellh/mapstructure
   version: bfdb1a85537d60bc7e954e600c250219ea497417
 - name: github.com/pborman/uuid
@@ -133,6 +135,8 @@ imports:
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
   version: 017119f7a78a0b5fc0ea39ef6be09f03acf3345d
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
