@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
+	"github.com/pkg/errors"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/gorilla/mux"
 )
@@ -22,6 +22,7 @@ func listDeploymentsHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		deployments, err := k8sConn.ListDeployments()
 		// TODO: differentiate between legit errors and unhandleable errors
 		if err != nil {
+			errors.Wrap(err, "")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
