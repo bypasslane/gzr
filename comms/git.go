@@ -39,7 +39,7 @@ func NewImageMetadata() (ImageMetadata, error) {
 	gm := NewLocalGitManager(path)
 	tags, annotations, err := gm.Tags()
 	if err != nil {
-		return meta, errors.Wrap(err, "failed to get tags and annotations from git")
+		return meta, errors.Wrap(err, "failed to get tags and annotations")
 	}
 	meta.GitTag = tags
 	meta.GitAnnotation = annotations
