@@ -24,12 +24,17 @@ type LocalGitManager struct {
 	path string
 }
 
+const failedToGetwdMsg = "failed to get working directory from OS"
+const failedToGetCommitHashMsg = "failed to get commit hash"
+const failedToGetRemoteMsg = "failed to get remote of git repo"
+const failedToChangeDirectoryMsg = "failed to change directory to %q."
+
 // NewImageMetadata returns a populated ImageMetadata based on a LocalGitManager
 func NewImageMetadata() (ImageMetadata, error) {
 	meta := ImageMetadata{}
 	path, err := os.Getwd()
 	if err != nil {
-		return meta, errors.Wrap(err, "failed to get working directory from OS")
+		return meta, errors.Wrap(err, failedToGetwdMsg)
 	}
 	gm := NewLocalGitManager(path)
 	tags, annotations, err := gm.Tags()
@@ -41,13 +46,13 @@ func NewImageMetadata() (ImageMetadata, error) {
 
 	remote, err := gm.Remote()
 	if err != nil {
-		return meta, errors.Wrap(err, "failed to get remote of git repo")
+		return meta, errors.Wrap(err, failedToGetRemoteMsg)
 	}
 	meta.GitOrigin = remote
 
 	hash, err := gm.CommitHash()
 	if err != nil {
-		return meta, errors.Wrap(err, "failed to get commit hash")
+		return meta, errors.Wrap(err, failedToGetCommitHashMsg)
 	}
 	meta.GitCommit = hash
 
@@ -71,11 +76,11 @@ func (gm *LocalGitManager) CommitHash() (string, error) {
 	if gm.path != "" {
 		oldPath, err := os.Getwd()
 		if err != nil {
-			return "", errors.Wrap(err, "failed to get working directory from OS")
+			return "", errors.Wrap(err, failedToGetwdMsg)
 		}
 		err = os.Chdir(gm.path)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to change directory to %q.", gm.path)
+			return "", errors.Wrapf(err, failedToChangeDirectoryMsg, gm.path)
 		}
 		defer os.Chdir(oldPath)
 	}
@@ -83,7 +88,7 @@ func (gm *LocalGitManager) CommitHash() (string, error) {
 
 	hash, err := hashCmd.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get commit hash")
+		return "", errors.Wrap(err, "failed to get git commit hash from git")
 	}
 
 	stripped := strings.TrimSpace(string(hash))
@@ -96,11 +101,11 @@ func (gm *LocalGitManager) Remote() (string, error) {
 	if gm.path != "" {
 		oldPath, err := os.Getwd()
 		if err != nil {
-			return "", errors.Wrap(err, "failed to get working directory from OS")
+			return "", errors.Wrap(err, failedToGetwdMsg)
 		}
 		err = os.Chdir(gm.path)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to change directory to %q.", gm.path)
+			return "", errors.Wrapf(err, failedToChangeDirectoryMsg, gm.path)
 		}
 		defer os.Chdir(oldPath)
 	}
@@ -124,7 +129,7 @@ func (gm *LocalGitManager) RepoName() (string, error) {
 	origin, err := gm.Remote()
 
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get remote of git repo")
+		return "", errors.Wrap(err, failedToGetRemoteMsg)
 	}
 
 	httpsRegex := regexp.MustCompile("^https://")
@@ -146,11 +151,11 @@ func (gm *LocalGitManager) Tags() ([]string, []string, error) {
 	if gm.path != "" {
 		oldPath, err := os.Getwd()
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to get working directory from OS")
+			return nil, nil, errors.Wrap(err, failedToGetwdMsg)
 		}
 		err = os.Chdir(gm.path)
 		if err != nil {
-			return nil, nil, errors.Wrapf(err, "failed to change directory to %q.", gm.path)
+			return nil, nil, errors.Wrapf(err, failedToChangeDirectoryMsg, gm.path)
 		}
 		defer os.Chdir(oldPath)
 	}
@@ -158,7 +163,7 @@ func (gm *LocalGitManager) Tags() ([]string, []string, error) {
 
 	rawTags, err := currentTags.CombinedOutput()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to retrieve tags and annotations from git.")
+		return nil, nil, errors.Wrap(err, "failed to retrieve tags and annotations from git")
 	}
 	tags, annotations := processTags(string(rawTags))
 	return tags, annotations, nil
