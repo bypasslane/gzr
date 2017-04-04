@@ -16,3 +16,6 @@ import:
 - package: go4.org
   subpackages:
   - reflectutil
+- package: github.com/Sirupsen/logrus
+  version: ^0.11.5
+- package: github.com/spf13/pflag
