@@ -19,3 +19,6 @@ import:
 - package: github.com/Sirupsen/logrus
   version: ^0.11.5
 - package: github.com/spf13/pflag
+- package: github.com/meatballhat/negroni-logrus
+- package: github.com/pkg/errors
+  version: ^0.8.0

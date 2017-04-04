@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -15,8 +15,6 @@ const (
 	LogrusDefaultLogLevelStringified = "info"
 )
 
-// logger is the application's global Logger, injected into other packages
-var logger *logrus.Logger
 var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
@@ -61,12 +59,9 @@ func initConfig() {
 }
 
 func setupLogging() {
-	logger = logrus.New()
-	logger.Formatter = &logrus.TextFormatter{}
-	lvl, err := logrus.ParseLevel(viper.GetString("log-level"))
+	lvl, err := log.ParseLevel(viper.GetString("log-level"))
 	if err != nil {
 		panic("Invalid logging level specified")
 	}
-	logger.Level = lvl
-
+	log.SetLevel(lvl)
 }
