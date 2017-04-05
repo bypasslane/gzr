@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	// LogrusDefaultLogLevelStringified maps to a valid value argument for logrus.ParseLevel
-	LogrusDefaultLogLevelStringified = "info"
+	// DefaultLogLevel maps to a valid value argument for logrus.ParseLevel
+	DefaultLogLevel = "info"
 )
 
 var cfgFile string
@@ -47,7 +47,7 @@ func initConfig() {
 	viper.SetConfigName(".gzr")  // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
 	viper.AutomaticEnv()         // read in environment variables that match
-	flag.String("log-level", LogrusDefaultLogLevelStringified, "the log level to use")
+	flag.String("log-level", DefaultLogLevel, "the log level to use")
 	viper.BindPFlag("log-level", flag.Lookup("log-level"))
 
 	// If a config file is found, read it in.
@@ -61,7 +61,7 @@ func initConfig() {
 func setupLogging() {
 	lvl, err := log.ParseLevel(viper.GetString("log-level"))
 	if err != nil {
-		panic("Invalid logging level specified")
+		er("Invalid logging level specified")
 	}
 	log.SetLevel(lvl)
 }

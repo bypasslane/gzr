@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	ErrContainerNotFound        = errors.New("requested container couldn't be found")
-	ErrDeploymentNotFound       = errors.New("requested Deployment couldn't be found")
-	ErrNoDeploymentsInNamespace = errors.New("no Deployments found in specified namespace")
+	ErrContainerNotFound        = func() error { return errors.New("requested container couldn't be found") }
+	ErrDeploymentNotFound       = func() error { return errors.New("requested Deployment couldn't be found") }
+	ErrNoDeploymentsInNamespace = func() error { return errors.New("no Deployments found in specified namespace") }
 )
 
 // GzrDeployment is just here to let us declare methods on k8s Deployments
@@ -99,7 +99,7 @@ func (k *K8sConnection) GetDeployment(deploymentName string) (*GzrDeployment, er
 	var gd *GzrDeployment
 	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).Get(deploymentName)
 	if err != nil {
-		return gd, err
+		return gd, errors.Wrapf(err, "failed to get deployment %q in namespace %q", deployment, k.namespace)
 	}
 	gdp := GzrDeployment(*deployment)
 	gd = &gdp
@@ -123,7 +123,7 @@ func (k *K8sConnection) UpdateDeployment(dci *DeploymentContainerInfo) (*GzrDepl
 	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.namespace).Get(dci.DeploymentName)
 	// no Name in ObjectMeta means it was returned empty
 	if deployment.ObjectMeta.Name == "" {
-		return gd, ErrDeploymentNotFound
+		return gd, ErrDeploymentNotFound()
 	}
 
 	for index, container := range deployment.Spec.Template.Spec.Containers {
@@ -134,14 +134,14 @@ func (k *K8sConnection) UpdateDeployment(dci *DeploymentContainerInfo) (*GzrDepl
 	}
 
 	if !found {
-		return gd, ErrContainerNotFound
+		return gd, ErrContainerNotFound()
 	}
 
 	deployment.Spec.Template.Spec.Containers[containerIndex].Image = dci.Image
 	deployment, err = k.clientset.ExtensionsV1beta1().Deployments(dci.Namespace).Update(deployment)
 
 	if err != nil {
-		return gd, err
+		return gd, errors.Wrap(err, "failed to update deployment")
 	}
 
 	gdp := GzrDeployment(*deployment)
@@ -155,11 +155,11 @@ func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
 	var gzrDeploymentList GzrDeploymentList
 	deploymentList, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).List(v1.ListOptions{})
 	if err != nil {
-		return &gzrDeploymentList, err
+		return &gzrDeploymentList, errors.Wrapf(err, "failed to get list of deployments for namespace %q", namespace)
 	}
 
 	if len(deploymentList.Items) == 0 {
-		return nil, ErrNoDeploymentsInNamespace
+		return nil, ErrNoDeploymentsInNamespace()
 	}
 
 	for _, deployment := range deploymentList.Items {
@@ -171,7 +171,7 @@ func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
 
 // SerializeForCLI takes an io.Writer and writes templatized data to it representing a Deployment
 func (d GzrDeployment) SerializeForCLI(wr io.Writer) error {
-	return d.cliTemplate().Execute(wr, d)
+	return errors.Wrap(d.cliTemplate().Execute(wr, d), "failed to serialize deployment ")
 }
 
 // cliTemplate returns the template that will be used for serializing Deployment data for display in the CLI
@@ -190,10 +190,12 @@ Deployment: {{.ObjectMeta.Name}}
 
 // SerializeForWire returns a JSON representation of the Deployment
 func (d GzrDeployment) SerializeForWire() ([]byte, error) {
-	return json.Marshal(d)
+	data, err := json.Marshal(d)
+	return data, errors.Wrap(err, "failed to convert deployment to json")
 }
 
 // SerializeForWire returns a JSON representation of the DeploymentList
 func (dl *GzrDeploymentList) SerializeForWire() ([]byte, error) {
-	return json.Marshal(dl)
+	data, err := json.Marshal(dl)
+	return data, errors.Wrap(err, "failed to convert deployment list to json")
 }

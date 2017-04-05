@@ -61,7 +61,7 @@ func NewImageMetadata() (ImageMetadata, error) {
 	return meta, nil
 }
 
-// NewLocalGitManager returns a pointer to an intialized LocalGitManager and takes a `path`
+// NewLocalGitManager returns a pointer to an initialized LocalGitManager and takes a `path`
 func NewLocalGitManager(path ...string) *LocalGitManager {
 	var thePath string
 	if path != nil {
