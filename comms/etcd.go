@@ -7,6 +7,7 @@ import (
 
 	"github.com/bradfitz/slice"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -27,7 +28,7 @@ func NewEtcdStorage() (GzrMetadataStore, error) {
 		Endpoints: []string{cxnString},
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create etcd client")
 	}
 	newEtcd.Client = cli
 
@@ -40,7 +41,7 @@ func NewEtcdStorage() (GzrMetadataStore, error) {
 func (store *EtcdStorage) List(imageName string) (*ImageList, error) {
 	resp, err := store.KV.Get(context.Background(), fmt.Sprintf("%s:", imageName), clientv3.WithPrefix())
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to retrieve images from etcd for %q", imageName)
 	}
 	return store.extractImages(resp)
 }
@@ -49,16 +50,16 @@ func (store *EtcdStorage) List(imageName string) (*ImageList, error) {
 func (store *EtcdStorage) Store(imageName string, meta ImageMetadata) error {
 	data, err := json.Marshal(meta)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to convert Image Metadata into json")
 	}
 
 	key, err := createKey(imageName)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to create key %q in etcd", imageName)
 	}
 	store.activeTxn = store.activeTxn.Then(clientv3.OpPut(key, string(data)))
 	if err != nil {
-		return err
+		return errors.Wrapf( err, "failed to store Image Metadata for image %q in etcd", imageName)
 	}
 	return nil
 }
@@ -71,20 +72,20 @@ func (store *EtcdStorage) Cleanup() {
 // Delete deletes all information related to IMAGE_NAME:VERSION
 func (store *EtcdStorage) Delete(imageName string) (int, error) {
 	resp, err := store.KV.Delete(context.Background(), imageName, clientv3.WithPrefix())
-	return int(resp.Deleted), err
+	return int(resp.Deleted), errors.Wrapf(err, "failed to delete image %q", imageName)
 }
 
 // Get returns a single image based on a name
 func (store *EtcdStorage) Get(imageName string) (*Image, error) {
 	resp, err := store.KV.Get(context.Background(), fmt.Sprintf("%s", imageName), clientv3.WithPrefix())
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get image %q from etcd", imageName)
 	}
 	if len(resp.Kvs) == 0 {
 		return nil, nil
 	}
 	if len(resp.Kvs) > 1 {
-		return nil, fmt.Errorf("Found multiple images for %s", imageName)
+		return nil, errors.Errorf("Found multiple images for %q", imageName)
 	}
 	return store.extractImage(resp.Kvs[0].Value, resp.Kvs[0].Key), nil
 }
@@ -112,7 +113,7 @@ func (store *EtcdStorage) StartTransaction() error {
 func (store *EtcdStorage) CommitTransaction() error {
 	_, err := store.activeTxn.Commit()
 	// TODO: Check response for errors
-	return err
+	return errors.Wrap(err, "failed to commit transaction to etcd")
 }
 
 // extractImage transforms raw []byte of metadata and key into a full Image
@@ -125,7 +126,7 @@ func (store *EtcdStorage) extractImage(data []byte, key []byte) *Image {
 // extractImages transforms an etcd response into an []Image
 func (store *EtcdStorage) extractImages(resp *clientv3.GetResponse) (*ImageList, error) {
 	if len(resp.Kvs) < 1 {
-		return nil, fmt.Errorf("No results found")
+		return nil, errors.Errorf("No results found")
 	}
 	var images []*Image
 	for _, kv := range resp.Kvs {
