@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"github.com/pkg/errors"
+
 	"github.com/bypasslane/gzr/comms"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // UpdateDeploymentUserType represents the payload of data that will come in from
@@ -54,7 +55,7 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		}
 		deployment, err := k8sConn.GetDeployment(name)
 
-		if err == comms.ErrDeploymentNotFound {
+		if err.Error() == comms.ErrDeploymentNotFound.Error() {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -85,7 +86,7 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		}
 		deployment, err = k8sConn.GetDeployment(name)
 
-		if err == comms.ErrDeploymentNotFound {
+		if err.Error() == comms.ErrDeploymentNotFound.Error() {
 			log.Println(err)
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -105,7 +106,7 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		deployment, err = k8sConn.UpdateDeployment(userData.convertToDeploymentContainerInfo(k8sConn.GetNamespace(), name))
 
 		// TODO: more fine-grained error reporting
-		if err == comms.ErrContainerNotFound {
+		if err.Error() == comms.ErrContainerNotFound.Error() {
 			log.Println(err)
 			w.WriteHeader(http.StatusNotFound)
 			return
