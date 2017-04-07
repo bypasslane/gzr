@@ -99,7 +99,7 @@ func (k *K8sConnection) GetDeployment(deploymentName string) (*GzrDeployment, er
 	var gd *GzrDeployment
 	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).Get(deploymentName)
 	if err != nil {
-		return gd, errors.Wrapf(err, "failed to get deployment %q in namespace %q", deployment, k.namespace)
+		return gd, errors.Wrapf(err, "failed to get deployment %q in namespace %q", deployment, k.GetNamespace())
 	}
 	gdp := GzrDeployment(*deployment)
 	gd = &gdp
@@ -155,7 +155,7 @@ func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
 	var gzrDeploymentList GzrDeploymentList
 	deploymentList, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).List(v1.ListOptions{})
 	if err != nil {
-		return &gzrDeploymentList, errors.Wrapf(err, "failed to get list of deployments for namespace %q", namespace)
+		return &gzrDeploymentList, errors.Wrapf(err, "failed to get list of deployments in namespace %q", k.GetNamespace())
 	}
 
 	if len(deploymentList.Items) == 0 {
