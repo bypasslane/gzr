@@ -3,14 +3,14 @@ package controllers
 import (
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/bypasslane/gzr/middleware"
 	"github.com/gorilla/mux"
 	"github.com/meatballhat/negroni-logrus"
-
-	log "github.com/Sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
+
 
 func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore) http.Handler {
 	router := mux.NewRouter().StrictSlash(true).UseEncodedPath()
