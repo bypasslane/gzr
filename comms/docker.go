@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/pkg/errors"
 )
 
 // ImageManager is an interface for building an application's image
@@ -53,24 +54,22 @@ func (docker *DockerManager) Push(name string) error {
 	return nil
 }
 
-// GetDockerTag combines a configured Docker repository name, the current workdinig directory,
+// GetDockerTag combines a configured Docker repository name, the current working directory,
 // the current time, and a git hash to create a Docker tag appropriate to gzr
 // Output format: `repository/$CWD:YYYYMMDD.SHORT_HASH`
 func GetDockerTag() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	gm := NewLocalGitManager(path)
+	// The cwd call isn't needed. The commit hash function already uses the current working directory
+	// and less work is done if the path isn't set
+	gm := NewLocalGitManager()
 	hash, err := gm.CommitHash()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap( err, "Failed to get git commit hash")
 	}
 
 	name, err := gm.RepoName()
 
 	if err != nil {
-		return "", err
+		return "", errors.Wrap( err, "Failed to get Repo Name from git")
 	}
 
 	return fmt.Sprintf("%s/%s:%s.%s", viper.GetString("repository"), name, time.Now().Format("20060102"), hash), nil

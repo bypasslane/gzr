@@ -1,5 +1,5 @@
-hash: 79195fe179749d1601a3e95eefe73ac40ec87d7f80e1cf1aa9c34d14a493e59f
-updated: 2017-04-11T14:23:16.536117641-05:00
+hash: 3527c7489946cd523c862a755a53d1693b1b2c3dafaa71e2aaeb5fa49c7f5e0f
+updated: 2017-04-11T14:38:08.441365559-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -178,7 +178,7 @@ imports:
   subpackages:
   - codec
 - name: github.com/urfave/negroni
-  version: fde5e16d32adc7ad637e9cd9ad21d4ebc6192535
+  version: c0db5feaa33826cd5117930c8f4ee5c0f565eec6
 - name: go4.org
   version: 169ea6cabe2a4888dba958edaecc9e9751adc711
   subpackages:

@@ -6,6 +6,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/bradfitz/slice"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -25,23 +26,23 @@ func NewBoltStorage() (GzrMetadataStore, error) {
 	dbPath := viper.GetString("datastore.db_path")
 	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to open connection to bolt database")
 	}
 	store := &BoltStorage{db: db}
 	txn, err := store.db.Begin(true)
 	if err != nil {
 		store.Cleanup()
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to start transaction in bolt database")
 	}
 	_, err = txn.CreateBucketIfNotExists([]byte(ImageBucket))
 	if err != nil {
 		store.Cleanup()
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to create bucket %q", ImageBucket)
 	}
 	err = txn.Commit()
 	if err != nil {
 		store.Cleanup()
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to commit changes to bolt database")
 	}
 	return store, nil
 }
@@ -60,7 +61,7 @@ func (store *BoltStorage) List(imageName string) (*ImageList, error) {
 		return nil
 	})
 	if err != nil {
-		return &ImageList{}, err
+		return &ImageList{}, errors.Wrap(err, "Failed to retrieve image list from bolt database")
 	}
 	return &ImageList{Images: images}, nil
 }
@@ -70,15 +71,15 @@ func (store *BoltStorage) Store(imageName string, meta ImageMetadata) error {
 	b := store.activeTxn.Bucket([]byte(ImageBucket))
 	data, err := json.Marshal(meta)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Failed to convert metadata into json for image %q", imageName)
 	}
 	key, err := createKey(imageName)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Failed to create db key %q in bolt db", imageName)
 	}
 	err = b.Put([]byte(key), data)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Failed to store metadata for key %q in bolt db", imageName)
 	}
 	return nil
 }
@@ -94,10 +95,10 @@ func (store *BoltStorage) Delete(imageName string) (int, error) {
 	c := b.Cursor()
 	prefix := []byte(imageName)
 	deleted := 0
-	for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
-		err := b.Delete(k)
+	for key, _ := c.Seek(prefix); key != nil && bytes.HasPrefix(key, prefix); key, _ = c.Next() {
+		err := b.Delete(key)
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrapf(err, "Failed to delete key %q from bolt db", key)
 		}
 		deleted += 1
 	}
@@ -117,7 +118,7 @@ func (store *BoltStorage) Get(imageName string) (*Image, error) {
 		return nil
 	})
 	if err != nil {
-		return &Image{}, err
+		return &Image{}, errors.Wrapf(err, "Failed to get images for %q from bolt db", imageName)
 	}
 	return image, nil
 }
@@ -138,7 +139,7 @@ func (store *BoltStorage) GetLatest(imageName string) (*Image, error) {
 func (store *BoltStorage) StartTransaction() error {
 	bTxn, err := store.db.Begin(true)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to create transaction")
 	}
 	store.activeTxn = bTxn
 	return nil

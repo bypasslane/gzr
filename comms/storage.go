@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // GzrMetadataStore is the interface that should be implemented for any
@@ -84,13 +86,15 @@ func (l *ImageList) cliTemplate() *template.Template {
 }
 
 // SerializeForWire returns a JSON representation of the ImageList
-func (l *ImageList) SerializeForWire() ([]byte, error) {
-	return json.Marshal(l)
+func (imageList *ImageList) SerializeForWire() ([]byte, error) {
+	data, err := json.Marshal(imageList)
+	return data, errors.Wrap(err, "Failed to transform image list to JSON")
 }
 
 // SerializeForWire returns a JSON representation of the Image
-func (i *Image) SerializeForWire() ([]byte, error) {
-	return json.Marshal(i)
+func (image *Image) SerializeForWire() ([]byte, error) {
+	data, err := json.Marshal(image)
+	return data, errors.Wrap(err, "Failed to transform image to JSON")
 }
 
 // SerializeForCLI takes an io.Writer and writes templated data to it representing an Image
@@ -110,12 +114,12 @@ func CreateMeta(reader io.ReadWriter) (ImageMetadata, error) {
 	var meta ImageMetadata
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return ImageMetadata{}, fmt.Errorf("Could not read metadata file: %s", err.Error())
+		return ImageMetadata{}, errors.Wrapf(err, "Could not read metadata file")
 	}
 
 	err = json.Unmarshal(b, &meta)
 	if err != nil {
-		return ImageMetadata{}, fmt.Errorf("Could not read metadata file: %s\nCheck the data types in your image metadata JSON.", err.Error())
+		return ImageMetadata{}, errors.Wrapf(err, "Could not read metadata file: \nCheck the data types in your image metadata JSON.")
 	}
 	return meta, nil
 }

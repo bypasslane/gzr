@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/bypasslane/gzr/comms"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 )
 
 // UpdateDeploymentUserType represents the payload of data that will come in from
@@ -23,12 +23,14 @@ func listDeploymentsHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		deployments, err := k8sConn.ListDeployments()
 		// TODO: differentiate between legit errors and unhandleable errors
 		if err != nil {
-			errors.Wrap(err, "")
+			log.WithError(err).Error("Unable to list deployments")
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
 		if deployments == nil {
+			log.Warn("No deployments found")
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -36,7 +38,9 @@ func listDeploymentsHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		jsonData, err := deployments.SerializeForWire()
 
 		if err != nil {
+			log.WithError(err).Error("Error serializing for wire")
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -50,13 +54,16 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		name := mux.Vars(r)["name"]
 
 		if name == "" {
-			log.Println("name param required for this path")
+			log.Warn("name param required for this path")
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("name param required for this path"))
 		}
 		deployment, err := k8sConn.GetDeployment(name)
 
 		if err.Error() == comms.ErrDeploymentNotFound.Error() {
+			log.WithError(err).Warn("Deployment not found")
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -65,7 +72,9 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		jsonData, err := deployment.SerializeForWire()
 
 		if err != nil {
+			log.WithError(err).Error("Error serializng for wire")
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -81,14 +90,15 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		name := mux.Vars(r)["name"]
 
 		if name == "" {
-			log.Println("name param required for this path")
+			log.Warn("name param required for this path")
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		deployment, err = k8sConn.GetDeployment(name)
 
 		if err.Error() == comms.ErrDeploymentNotFound.Error() {
-			log.Println(err)
+			log.WithError(err).Warn("Error getting deployment")
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -98,8 +108,9 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		err = decoder.Decode(userData)
 
 		if err != nil {
-			log.Println("Error decoding JSON")
+			log.WithError(err).Warn("Error decoding JSON")
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -107,8 +118,9 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 
 		// TODO: more fine-grained error reporting
 		if err.Error() == comms.ErrContainerNotFound.Error() {
-			log.Println(err)
+			log.WithError(err).Warn("Conatiner not found")
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -116,8 +128,9 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 
 		// TODO: more fine-grained error reporting
 		if err != nil {
-			log.Println(err)
+			log.WithError(err).Error("Error serialzing for wire")
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
