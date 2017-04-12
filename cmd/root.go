@@ -28,7 +28,7 @@ var RootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		er(fmt.Sprintf(err.Error()))
+		erWithDetails(err, "run time error")
 	}
 }
 
@@ -61,7 +61,8 @@ func initConfig() {
 func setupLogging() {
 	lvl, err := log.ParseLevel(viper.GetString("log-level"))
 	if err != nil {
-		er("Invalid logging level specified")
+		erWithDetails(err,"Invalid logging level specified")
 	}
 	log.SetLevel(lvl)
+	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
 }

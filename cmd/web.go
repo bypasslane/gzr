@@ -25,8 +25,7 @@ gzr web --port=<CUSTOM_PORT_NUMBER>
 		k8sConn, connErr = comms.NewK8sConnection(namespace)
 		if connErr != nil {
 			// TODO: figure out the Cobra way to handle this
-			msg := fmt.Sprintf("problem establishing k8s connection: %s", connErr)
-			er(msg)
+			erWithDetails(connErr, "Problem establishing k8s connection")
 		}
 		setupImageStore()
 	},

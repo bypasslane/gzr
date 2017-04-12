@@ -23,7 +23,7 @@ var buildCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := buildHandler(args, imageManager)
 		if err != nil {
-			er(err.Error())
+			erWithDetails(err, "Failed to build image")
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
@@ -32,7 +32,7 @@ var buildCmd = &cobra.Command{
 	DisableFlagParsing: true,
 }
 
-// buildHander handles the arguments from running a build command.
+// buildHandler handles the arguments from running a build command.
 // The steps involved are as follows: Build image, create the metadata blob
 // that accompanies the image, create the tag for docker, use a transaction
 // to store the metadata and push the image

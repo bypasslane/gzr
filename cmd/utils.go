@@ -31,7 +31,7 @@ func er(msg interface{}) {
 	log.Error(msg)
 	os.Exit(-1)
 }
-func withError(err error, msg interface{}) {
+func erWithDetails(err error, msg interface{}) {
 	log.WithError(err).Error(msg)
 	os.Exit(-1)
 }
@@ -66,7 +66,7 @@ func setupImageStore() {
 	}
 	newStore, err := storeCreator()
 	if err != nil {
-		withError(err, "failed to initialize store")
+		erWithDetails(err, "failed to initialize store")
 	}
 	imageStore = newStore
 }
