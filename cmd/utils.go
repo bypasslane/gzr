@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+
+	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -26,7 +28,11 @@ var imageManager comms.ImageManager
 
 // er prints an error message and exits. Lifted from Cobra source.
 func er(msg interface{}) {
-	fmt.Println("Error:", msg)
+	log.Error(msg)
+	os.Exit(-1)
+}
+func withError(err error, msg interface{}) {
+	log.WithError(err).Error(msg)
 	os.Exit(-1)
 }
 
@@ -60,7 +66,7 @@ func setupImageStore() {
 	}
 	newStore, err := storeCreator()
 	if err != nil {
-		er(fmt.Sprintf("%s", err.Error()))
+		withError(err, "failed to initialize store")
 	}
 	imageStore = newStore
 }
