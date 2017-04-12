@@ -43,27 +43,27 @@ The structure of the JSON at the METADATA_PATH should be as follows:
 }`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			erBadUsage(fmt.Sprintf("Must provide IMAGE_NAME:VERSION and METADATA_PATH"), cmd)
+			erBadUsage("Must provide IMAGE_NAME:VERSION and METADATA_PATH", cmd)
 		}
 		reader, err := os.Open(args[1])
 		if err != nil {
-			er(fmt.Sprintf("Could not read metadata file"))
+			erWithDetails(err, "Could not read metadata file")
 		}
 		meta, err := comms.CreateMeta(reader)
 		if err != nil {
-			er(fmt.Sprintf("%s", err.Error()))
+			erWithDetails(err, "Create meta failed")
 		}
 		err = imageStore.StartTransaction()
 		if err != nil {
-			er(fmt.Sprintf("%s", err.Error()))
+			erWithDetails(err, "failed to start transaction")
 		}
 		err = imageStore.Store(args[0], meta)
 		if err != nil {
-			er(fmt.Sprintf("Error storring image: %s", err.Error()))
+			erWithDetails(err, "Error storing image")
 		}
 		err = imageStore.CommitTransaction()
 		if err != nil {
-			er(fmt.Sprintf("%s", err.Error()))
+			erWithDetails(err, "failed to commit transaction")
 		}
 		fmt.Printf("Stored %s\n", args[0])
 	},
@@ -76,19 +76,19 @@ var getCmd = &cobra.Command{
 including all versions held within gzr`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			erBadUsage(fmt.Sprintf("Must provide IMAGE_NAME"), cmd)
+			erBadUsage("Must provide IMAGE_NAME", cmd)
 		}
 		name := fmt.Sprintf("%s/%s", viper.GetString("repository"), args[0])
 		if latest {
 			image, err := imageStore.GetLatest(name)
 			if err != nil {
-				er(fmt.Sprintf("%s", err.Error()))
+				erWithDetails(err, "Failed to get latest image")
 			}
 			image.SerializeForCLI(os.Stdout)
 		} else {
 			images, err := imageStore.List(name)
 			if err != nil {
-				er(fmt.Sprintf("%s", err.Error()))
+				erWithDetails(err, "Failed to get images")
 			}
 			images.SerializeForCLI(os.Stdout)
 		}
@@ -100,24 +100,24 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete metadata about an image:version within gzr",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			erBadUsage(fmt.Sprintf("Must provide IMAGE_NAME:VERSION"), cmd)
+			erBadUsage("Must provide IMAGE_NAME:VERSION", cmd)
 		}
 		splitName := strings.Split(args[0], ":")
 		if len(splitName) != 2 {
-			er(fmt.Sprintf("IMAGE_NAME must be formatted as NAME:VERSION and must contain only the seperating colon"))
+			er("IMAGE_NAME must be formatted as NAME:VERSION and must contain only the seperating colon")
 		}
 		err := imageStore.StartTransaction()
 		if err != nil {
-			er(fmt.Sprintf("%s", err.Error()))
+			erWithDetails(err, "Failed to start transaction")
 		}
 		name := fmt.Sprintf("%s/%s", viper.GetString("repository"), args[0])
 		deleted, err := imageStore.Delete(name)
 		if err != nil {
-			er(fmt.Sprintf("%s", err.Error()))
+			erWithDetails(err, "Failed to delete image")
 		}
 		err = imageStore.CommitTransaction()
 		if err != nil {
-			er(fmt.Sprintf("%s", err.Error()))
+			erWithDetails(err, "Failed to commit transaction")
 		}
 		fmt.Printf("Deleted %d\n", deleted)
 	},

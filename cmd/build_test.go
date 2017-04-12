@@ -35,7 +35,7 @@ func TestBuildHandler(t *testing.T) {
 		t.Errorf("buildHandler errored with %s", err.Error())
 	}
 	if !buildCalled || !pushCalled || !storeCalled || !startCalled || !commitCalled {
-		t.Errorf("buildHandler did not call the correct functions")
+		t.Error("buildHandler did not call the correct functions")
 	}
 }
 
