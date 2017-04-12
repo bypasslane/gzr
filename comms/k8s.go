@@ -2,6 +2,7 @@ package comms
 
 import (
 	"encoding/json"
+	e "errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,9 +17,9 @@ import (
 )
 
 var (
-	ErrContainerNotFound        = errors.New("requested container couldn't be found")
-	ErrDeploymentNotFound       = errors.New("requested Deployment couldn't be found")
-	ErrNoDeploymentsInNamespace = errors.New("no Deployments found in specified namespace")
+	ErrContainerNotFound        = e.New("requested container couldn't be found")
+	ErrDeploymentNotFound       = e.New("requested Deployment couldn't be found")
+	ErrNoDeploymentsInNamespace = e.New("no Deployments found in specified namespace")
 )
 
 // GzrDeployment is just here to let us declare methods on k8s Deployments

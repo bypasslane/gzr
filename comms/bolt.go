@@ -127,7 +127,7 @@ func (store *BoltStorage) Get(imageName string) (*Image, error) {
 func (store *BoltStorage) GetLatest(imageName string) (*Image, error) {
 	images, err := store.List(imageName)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf( err, "Unable to get images for %q", imageName)
 	}
 	slice.Sort(images.Images, func(i, j int) bool {
 		return images.Images[j].Meta.CreatedAt < images.Images[i].Meta.CreatedAt

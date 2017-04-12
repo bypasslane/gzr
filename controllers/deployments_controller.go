@@ -8,6 +8,7 @@ import (
 
 	"github.com/bypasslane/gzr/comms"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // UpdateDeploymentUserType represents the payload of data that will come in from
@@ -60,7 +61,7 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		}
 		deployment, err := k8sConn.GetDeployment(name)
 
-		if err.Error() == comms.ErrDeploymentNotFound.Error() {
+		if errors.Cause(err) == comms.ErrDeploymentNotFound {
 			log.WithError(err).Warn("Deployment not found")
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(err.Error()))
@@ -95,7 +96,7 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		}
 		deployment, err = k8sConn.GetDeployment(name)
 
-		if err.Error() == comms.ErrDeploymentNotFound.Error() {
+		if errors.Cause(err) == comms.ErrDeploymentNotFound {
 			log.WithError(err).Warn("Error getting deployment")
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(err.Error()))
@@ -117,7 +118,7 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		deployment, err = k8sConn.UpdateDeployment(userData.convertToDeploymentContainerInfo(k8sConn.GetNamespace(), name))
 
 		// TODO: more fine-grained error reporting
-		if err.Error() == comms.ErrContainerNotFound.Error() {
+		if errors.Cause(err) == comms.ErrContainerNotFound {
 			log.WithError(err).Warn("Conatiner not found")
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(err.Error()))
