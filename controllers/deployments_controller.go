@@ -62,7 +62,7 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 		deployment, err := k8sConn.GetDeployment(name)
 
 		if errors.Cause(err) == comms.ErrDeploymentNotFound {
-			log.WithError(err).Warn("Deployment not found")
+			log.WithError(err).Warnf("Deployment not found for %q", name)
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(err.Error()))
 			return

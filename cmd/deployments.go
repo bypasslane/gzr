@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +42,7 @@ var deploymentsListCmd = &cobra.Command{
 deployments list
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		listDeploymentsHandler(namespace)
+		listDeploymentsHandler()
 	},
 }
 
@@ -105,10 +105,10 @@ func getDeploymentHandler(deploymentName string) {
 }
 
 // listDeploymentsHandler fetches Deployments and prints them to the CLI
-func listDeploymentsHandler(namespace string) {
+func listDeploymentsHandler() {
 	dlist, err := k8sConn.ListDeployments()
 	if err != nil {
-		log.Fatalln("Error retrieving Deployments: %s", err)
+		log.WithError(err).Error("Error retrieving Deployments")
 	}
 	for _, deployment := range dlist.Deployments {
 		deployment.SerializeForCLI(os.Stdout)
