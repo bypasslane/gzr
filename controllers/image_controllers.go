@@ -24,7 +24,7 @@ func getImagesHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 
 		images, err := imageStore.List(name)
 		if err != nil {
-			log.WithError(err).Warnf("Error retrieving images for %q", name)
+			logErrorFields(err).Warnf("Error retrieving images for %q", name)
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
@@ -37,7 +37,7 @@ func getImagesHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 
 		jsonData, err := images.SerializeForWire()
 		if err != nil {
-			log.WithError(err).Error("Error serializing images")
+			logErrorFields(err).Error("Error serializing images")
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
@@ -52,7 +52,7 @@ func getImageHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 		name := mux.Vars(r)["name"]
 		name, err := url.QueryUnescape(name)
 		if err != nil {
-			log.WithError(err).Warn("name parameter in unexpected format")
+			logErrorFields(err).Warn("name parameter in unexpected format")
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
@@ -64,10 +64,10 @@ func getImageHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 			w.Write([]byte("name and version required for this path"))
 			return
 		}
-		searchString :=  fmt.Sprintf("%s:%s", name, version)
+		searchString := fmt.Sprintf("%s:%s", name, version)
 		image, err := imageStore.Get(searchString)
 		if err != nil {
-			log.WithError(err).Warn("image store failed to retrieve value for %q", searchString)
+			logErrorFields(err).Warn("image store failed to retrieve value for %q", searchString)
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
@@ -81,7 +81,7 @@ func getImageHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 
 		jsonData, err := image.SerializeForWire()
 		if err != nil {
-			log.WithError(err).Error("Error serializng image data for wire")
+			logErrorFields(err).Error("Error serializng image data for wire")
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
