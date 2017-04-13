@@ -9,6 +9,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/urfave/negroni"
+	"github.com/pkg/errors"
+
+	"fmt"
 )
 
 
@@ -26,11 +29,12 @@ func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore) http.
 	//middleware setup (basically same as classic but uses our logrus for logging)
 
 	recovery := negroni.NewRecovery()
-	logger := negronilogrus.NewCustomMiddleware(log.GetLevel(), &log.JSONFormatter{}, "web")
+	loggerMiddleware := negronilogrus.NewCustomMiddleware(log.GetLevel(), &log.JSONFormatter{}, "web")
+
 	static := negroni.NewStatic(http.Dir("public"))
 	jsonHeader := middleware.NewContentType()
 
-	n := negroni.New(recovery, logger, static, jsonHeader)
+	n := negroni.New(recovery, loggerMiddleware, static, jsonHeader)
 
 	n.UseHandler(router)
 
@@ -40,4 +44,16 @@ func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore) http.
 // homeHandler handles requests to the root of the server
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("CHOOSE THE FORM"))
+}
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
+func logErrorFields(err error) *log.Entry{
+	logEntry :=  log.WithError(err)
+	if err, ok := err.(stackTracer); ok {
+		logEntry = logEntry.WithField("stacktrace", fmt.Sprintf("%+v", err.(stackTracer).StackTrace()))
+	}
+	return logEntry
 }

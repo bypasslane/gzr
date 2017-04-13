@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,8 +31,17 @@ func er(msg interface{}) {
 	log.Error(msg)
 	os.Exit(-1)
 }
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
 func erWithDetails(err error, msg interface{}) {
-	log.WithError(err).Error(msg)
+	logEntry := log.WithField("error", err)
+	if err, ok := err.(stackTracer); ok {
+		logEntry = logEntry.WithField("stacktrace", fmt.Sprintf("%+v", err.(stackTracer).StackTrace()))
+	}
+	logEntry.Error(msg)
 	os.Exit(-1)
 }
 

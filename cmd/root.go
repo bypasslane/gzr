@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
 )
 
 const (
@@ -65,4 +66,5 @@ func setupLogging() {
 	}
 	log.SetLevel(lvl)
 	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
+	//log.SetFormatter(&log.JSONFormatter{})
 }
