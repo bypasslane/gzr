@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
@@ -8,12 +9,9 @@ import (
 	"github.com/bypasslane/gzr/middleware"
 	"github.com/gorilla/mux"
 	"github.com/meatballhat/negroni-logrus"
-	"github.com/urfave/negroni"
 	"github.com/pkg/errors"
-
-	"fmt"
+	"github.com/urfave/negroni"
 )
-
 
 func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore) http.Handler {
 	router := mux.NewRouter().StrictSlash(true).UseEncodedPath()
@@ -50,8 +48,8 @@ type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
 
-func logErrorFields(err error) *log.Entry{
-	logEntry :=  log.WithError(err)
+func logErrorFields(err error) *log.Entry {
+	logEntry := log.WithError(err)
 	if err, ok := err.(stackTracer); ok {
 		logEntry = logEntry.WithField("stacktrace", fmt.Sprintf("%+v", err.(stackTracer).StackTrace()))
 	}

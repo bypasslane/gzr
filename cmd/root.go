@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
 )
 
 const (
@@ -62,9 +61,8 @@ func initConfig() {
 func setupLogging() {
 	lvl, err := log.ParseLevel(viper.GetString("log-level"))
 	if err != nil {
-		erWithDetails(err,"Invalid logging level specified")
+		erWithDetails(err, "Invalid logging level specified")
 	}
 	log.SetLevel(lvl)
 	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
-	//log.SetFormatter(&log.JSONFormatter{})
 }
