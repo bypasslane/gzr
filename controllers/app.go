@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/GeertJohan/go.rice"
 	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/bypasslane/gzr/middleware"
@@ -29,7 +30,10 @@ func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore) http.
 	recovery := negroni.NewRecovery()
 	loggerMiddleware := negronilogrus.NewCustomMiddleware(log.GetLevel(), &log.JSONFormatter{}, "web")
 
-	static := negroni.NewStatic(http.Dir("public"))
+	conf := rice.Config{
+		LocateOrder: []rice.LocateMethod{ rice.LocateAppended, rice.LocateWorkingDirectory},
+	}
+	static := negroni.NewStatic(conf.MustFindBox("public").HTTPBox())
 	jsonHeader := middleware.NewContentType()
 
 	n := negroni.New(recovery, loggerMiddleware, static, jsonHeader)
