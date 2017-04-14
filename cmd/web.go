@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/bypasslane/gzr/controllers"
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ gzr web
 gzr web --port=<CUSTOM_PORT_NUMBER>
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		log.SetFormatter(&log.JSONFormatter{})
 		var connErr error
 		k8sConn, connErr = comms.NewK8sConnection(namespace)
 		if connErr != nil {
