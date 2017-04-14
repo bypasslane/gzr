@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/client-go/tools/clientcmd"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/bypasslane/gzr/controllers"
 	"github.com/spf13/cobra"
@@ -21,6 +22,7 @@ gzr web --port=<CUSTOM_PORT_NUMBER>
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		setNamespace()
+		log.SetFormatter(&log.JSONFormatter{})
 		var connErr error
 		k8sConn, connErr = comms.NewK8sConnection(namespace)
 		if connErr != nil {
