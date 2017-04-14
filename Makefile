@@ -9,6 +9,7 @@ vendor_install:
 build:
 	go build -i -o gzr
 
+
 clean:
 	rm gzr
 

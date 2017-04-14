@@ -1,5 +1,5 @@
-hash: 3527c7489946cd523c862a755a53d1693b1b2c3dafaa71e2aaeb5fa49c7f5e0f
-updated: 2017-04-11T14:38:08.441365559-05:00
+hash: 392ced404e3d7732f1da3029620b274b6310040e5092d30eb3b702340f2d4e70
+updated: 2017-04-13T13:13:57.353513165-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -40,6 +40,8 @@ imports:
   - health
   - httputil
   - timeutil
+- name: github.com/daaku/go.zipexe
+  version: a5fe2436ffcb3236e175e5149162b41cd28bd27d
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
@@ -56,6 +58,10 @@ imports:
   - swagger
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
+- name: github.com/GeertJohan/go.rice
+  version: fbe422beac33c4443570d39dccb4b0c4c914d6ca
+  subpackages:
+  - embedded
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/go-openapi/jsonpointer
@@ -113,6 +119,8 @@ imports:
   version: 2eee05ed794112d45db504eb05aa693efd2b8b09
 - name: github.com/juju/ratelimit
   version: 77ed1c8a01217656d2080ad51981f6e99adaa177
+- name: github.com/kardianos/osext
+  version: 9d302b58e975387d0b4d9be876622c86cefe64be
 - name: github.com/magiconair/properties
   version: 9c47895dc1ce54302908ab8a43385d1f5df2c11c
 - name: github.com/mailru/easyjson

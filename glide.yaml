@@ -22,3 +22,4 @@ import:
 - package: github.com/meatballhat/negroni-logrus
 - package: github.com/pkg/errors
   version: ^0.8.0
+- package: github.com/GeertJohan/go.rice
