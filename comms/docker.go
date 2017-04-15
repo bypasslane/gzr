@@ -63,13 +63,13 @@ func GetDockerTag() (string, error) {
 	gm := NewLocalGitManager()
 	hash, err := gm.CommitHash()
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to get git commit hash")
+		return "", errors.Wrap(err, "Failed to retrive git commit hash")
 	}
 
 	name, err := gm.RepoName()
 
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to get Repo Name from git")
+		return "", errors.Wrap(err, "Failed to retrive repository name from git")
 	}
 
 	return fmt.Sprintf("%s/%s:%s.%s", viper.GetString("repository"), name, time.Now().Format("20060102"), hash), nil
