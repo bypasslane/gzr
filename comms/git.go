@@ -24,10 +24,12 @@ type LocalGitManager struct {
 	path string
 }
 
-const failedToGetwdMsg = "failed to get working directory from OS"
-const failedToGetCommitHashMsg = "failed to get commit hash"
-const failedToGetRemoteMsg = "failed to get remote of git repo"
-const failedToChangeDirectoryMsg = "failed to change directory to %q."
+const (
+	failedToGetwdMsg           = "failed to get working directory from OS"
+	failedToGetCommitHashMsg   = "failed to get commit hash"
+	failedToGetRemoteMsg       = "failed to get remote of git repo"
+	failedToChangeDirectoryMsg = "failed to change directory to %q."
+)
 
 // NewImageMetadata returns a populated ImageMetadata based on a LocalGitManager
 func NewImageMetadata() (ImageMetadata, error) {
@@ -39,7 +41,7 @@ func NewImageMetadata() (ImageMetadata, error) {
 	gm := NewLocalGitManager(path)
 	tags, annotations, err := gm.Tags()
 	if err != nil {
-		return meta, errors.Wrap(err, "failed to get tags and annotations")
+		return meta, errors.Wrap(err, "Failed to get tags and annotations")
 	}
 	meta.GitTag = tags
 	meta.GitAnnotation = annotations
@@ -88,7 +90,7 @@ func (gm *LocalGitManager) CommitHash() (string, error) {
 
 	hash, err := hashCmd.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get git commit hash from git")
+		return "", errors.Wrap(err, "Failed to retrive git commit hash from git")
 	}
 
 	stripped := strings.TrimSpace(string(hash))
@@ -112,7 +114,7 @@ func (gm *LocalGitManager) Remote() (string, error) {
 	remoteCmd := exec.Command("git", "remote", "-v")
 	remote, err := remoteCmd.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get git remote value")
+		return "", errors.Wrap(err, "Failed to retrive git remote value")
 	}
 
 	remotes := strings.Fields(string(remote))
@@ -142,7 +144,7 @@ func (gm *LocalGitManager) RepoName() (string, error) {
 	if gitRegex.MatchString(origin) {
 		return processGitRepoName(origin), nil
 	}
-	return "", errors.Errorf("unknown git scheme for remote address %q", origin)
+	return "", errors.Errorf("Unknown git scheme for remote address %q", origin)
 }
 
 // Tags returns the tags and accompanying annotations of a git repo at either
@@ -163,7 +165,7 @@ func (gm *LocalGitManager) Tags() ([]string, []string, error) {
 
 	rawTags, err := currentTags.CombinedOutput()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to retrieve tags and annotations from git")
+		return nil, nil, errors.Wrap(err, "Failed to retrieve tags and annotations from git")
 	}
 	tags, annotations := processTags(string(rawTags))
 	return tags, annotations, nil

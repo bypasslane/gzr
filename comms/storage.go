@@ -128,7 +128,7 @@ func CreateMeta(reader io.ReadWriter) (ImageMetadata, error) {
 func createKey(imageName string) (string, error) {
 	splitName := strings.Split(imageName, ":")
 	if len(splitName) != 2 {
-		return "", fmt.Errorf("IMAGE_NAME must be formatted as NAME:VERSION and must contain only the seperating colon")
+		return "", errors.New("IMAGE_NAME must be formatted as NAME:VERSION and must contain only the seperating colon")
 	}
 	name := fmt.Sprintf("%s:%s", splitName[0], splitName[1])
 	fmt.Println(name)

@@ -26,6 +26,11 @@ var imageCmd = &cobra.Command{
 	},
 }
 
+const (
+	msgFailedToStartTransaction  = "Failed to start transaction"
+	msgFailedToCommitTransaction = "Failed to commit transaction"
+)
+
 var storeCmd = &cobra.Command{
 	Use:   "store IMAGE_NAME:VERSION METADATA_PATH",
 	Short: "Store metadata about an image for gzr to track",
@@ -55,7 +60,7 @@ The structure of the JSON at the METADATA_PATH should be as follows:
 		}
 		err = imageStore.StartTransaction()
 		if err != nil {
-			erWithDetails(err, "failed to start transaction")
+			erWithDetails(err, msgFailedToStartTransaction)
 		}
 		err = imageStore.Store(args[0], meta)
 		if err != nil {
@@ -63,7 +68,7 @@ The structure of the JSON at the METADATA_PATH should be as follows:
 		}
 		err = imageStore.CommitTransaction()
 		if err != nil {
-			erWithDetails(err, "failed to commit transaction")
+			erWithDetails(err, msgFailedToCommitTransaction)
 		}
 		fmt.Printf("Stored %s\n", args[0])
 	},
@@ -108,7 +113,7 @@ var deleteCmd = &cobra.Command{
 		}
 		err := imageStore.StartTransaction()
 		if err != nil {
-			erWithDetails(err, "Failed to start transaction")
+			erWithDetails(err, msgFailedToStartTransaction)
 		}
 		name := fmt.Sprintf("%s/%s", viper.GetString("repository"), args[0])
 		deleted, err := imageStore.Delete(name)
@@ -117,7 +122,7 @@ var deleteCmd = &cobra.Command{
 		}
 		err = imageStore.CommitTransaction()
 		if err != nil {
-			erWithDetails(err, "Failed to commit transaction")
+			erWithDetails(err, msgFailedToCommitTransaction)
 		}
 		fmt.Printf("Deleted %d\n", deleted)
 	},

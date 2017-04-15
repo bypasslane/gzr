@@ -17,9 +17,9 @@ import (
 )
 
 var (
-	ErrContainerNotFound        = e.New("requested container couldn't be found")
-	ErrDeploymentNotFound       = e.New("requested Deployment couldn't be found")
-	ErrNoDeploymentsInNamespace = e.New("no Deployments found in specified namespace")
+	ErrContainerNotFound        = e.New("Requested container couldn't be found")
+	ErrDeploymentNotFound       = e.New("Requested deployment couldn't be found")
+	ErrNoDeploymentsInNamespace = e.New("No deployments found in specified namespace")
 )
 
 // GzrDeployment is just here to let us declare methods on k8s Deployments
@@ -100,7 +100,7 @@ func (k *K8sConnection) GetDeployment(deploymentName string) (*GzrDeployment, er
 	var gd *GzrDeployment
 	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).Get(deploymentName)
 	if err != nil {
-		return gd, errors.Wrapf(err, "failed to get deployment %q in namespace %q", deployment, k.GetNamespace())
+		return gd, errors.Wrapf(err, "Failed to get deployment %q in namespace %q", deployment, k.GetNamespace())
 	}
 	gdp := GzrDeployment(*deployment)
 	gd = &gdp
@@ -142,7 +142,7 @@ func (k *K8sConnection) UpdateDeployment(dci *DeploymentContainerInfo) (*GzrDepl
 	deployment, err = k.clientset.ExtensionsV1beta1().Deployments(dci.Namespace).Update(deployment)
 
 	if err != nil {
-		return gd, errors.Wrap(err, "failed to update deployment")
+		return gd, errors.Wrap(err, "Failed to update deployment")
 	}
 
 	gdp := GzrDeployment(*deployment)
@@ -156,7 +156,7 @@ func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
 	var gzrDeploymentList GzrDeploymentList
 	deploymentList, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).List(v1.ListOptions{})
 	if err != nil {
-		return &gzrDeploymentList, errors.Wrapf(err, "failed to get list of deployments in namespace %q", k.GetNamespace())
+		return &gzrDeploymentList, errors.Wrapf(err, "Failed to get list of deployments in namespace %q", k.GetNamespace())
 	}
 
 	if len(deploymentList.Items) == 0 {
@@ -172,7 +172,7 @@ func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
 
 // SerializeForCLI takes an io.Writer and writes templatized data to it representing a Deployment
 func (d GzrDeployment) SerializeForCLI(wr io.Writer) error {
-	return errors.Wrap(d.cliTemplate().Execute(wr, d), "failed to serialize deployment ")
+	return errors.Wrap(d.cliTemplate().Execute(wr, d), "Failed to serialize deployment ")
 }
 
 // cliTemplate returns the template that will be used for serializing Deployment data for display in the CLI
@@ -192,11 +192,11 @@ Deployment: {{.ObjectMeta.Name}}
 // SerializeForWire returns a JSON representation of the Deployment
 func (d GzrDeployment) SerializeForWire() ([]byte, error) {
 	data, err := json.Marshal(d)
-	return data, errors.Wrap(err, "failed to convert deployment to json")
+	return data, errors.Wrap(err, "Failed to convert deployment to json")
 }
 
 // SerializeForWire returns a JSON representation of the DeploymentList
 func (dl *GzrDeploymentList) SerializeForWire() ([]byte, error) {
 	data, err := json.Marshal(dl)
-	return data, errors.Wrap(err, "failed to convert deployment list to json")
+	return data, errors.Wrap(err, "Failed to convert deployment list to json")
 }

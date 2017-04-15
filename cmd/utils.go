@@ -75,7 +75,7 @@ func setupImageStore() {
 	}
 	newStore, err := storeCreator()
 	if err != nil {
-		erWithDetails(err, "failed to initialize store")
+		erWithDetails(err, "Failed to initialize store")
 	}
 	imageStore = newStore
 }
