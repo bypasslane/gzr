@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 	"github.com/bradfitz/slice"
 	"github.com/pkg/errors"
@@ -24,6 +25,8 @@ type BoltStorage struct {
 // and returns a BoltStorage pointer with the established connection
 func NewBoltStorage() (GzrMetadataStore, error) {
 	dbPath := viper.GetString("datastore.db_path")
+	debugLog := log.WithFields(log.Fields{"path": dbPath})
+	defer debugLog.Debug("NewBoltStorage")
 	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to open connection to bolt database")
@@ -44,17 +47,21 @@ func NewBoltStorage() (GzrMetadataStore, error) {
 		store.Cleanup()
 		return nil, errors.Wrap(err, "Failed to commit changes to bolt database")
 	}
+
 	return store, nil
 }
 
 // List queries the Bolt store for all images stored under a particular name
 func (store *BoltStorage) List(imageName string) (*ImageList, error) {
 	var images []*Image
+	debugLog := log.WithFields(log.Fields{"imageName": imageName})
+	defer debugLog.Debug("List")
 	err := store.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ImageBucket))
 		c := b.Cursor()
 		prefix := []byte(imageName)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			debugLog = debugLog.WithField(string(k[:]), string(v[:]))
 			img := store.extractImage(v, k)
 			images = append(images, img)
 		}
