@@ -38,8 +38,12 @@ installRelease() {
 }
 
 masterDeps() {
-    req="git, go, and glide"
+    req="git, zip, go, and glide"
     if ! hash git 2>/dev/null; then
+        echo "please install required: ${req}"
+        exit 1
+    fi
+    if ! hash zip 2>/dev/null; then
         echo "please install required: ${req}"
         exit 1
     fi
@@ -68,6 +72,10 @@ installMaster() {
     fi
 
     pushd $GOPATH/src/github.com/bypasslane/gzr
+        if ! make install_deps; then
+            echo "failed to install dependencies"
+            exit 1
+        fi
         if ! make install; then
             echo "failed glide install"
             exit 1
