@@ -1,5 +1,5 @@
 hash: 392ced404e3d7732f1da3029620b274b6310040e5092d30eb3b702340f2d4e70
-updated: 2017-04-13T13:13:57.353513165-05:00
+updated: 2017-04-18T11:43:40.63023975-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -59,7 +59,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/GeertJohan/go.rice
-  version: fbe422beac33c4443570d39dccb4b0c4c914d6ca
+  version: 6157c087165faab0591ed97d90215bfac0921b4c
   subpackages:
   - embedded
 - name: github.com/ghodss/yaml
