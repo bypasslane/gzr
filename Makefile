@@ -15,7 +15,7 @@ build_web: build
 	cd gozer-web; npm i -g webpack; npm i; npm run build;
 	rice -i=github.com/bypasslane/gzr/controllers append --exec=./gzr
 
-install_deps:
+install_build_deps:
 	go get -u $(DEPEND)
 	go install $(DEPEND)
 

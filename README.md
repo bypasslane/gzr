@@ -63,7 +63,7 @@ Your config file should be stored in $HOME/.gzr.json. If you are using the BoltD
 ### Make commands
 * `make` and `make build` - builds gzr executable
 * `make build_web` - builds web assets and uses rice tool to append them to executable
-* `make install_deps` - installs rice cli tool
+* `make install_build_deps` - installs rice cli tool
 
 ### Project folders
 
