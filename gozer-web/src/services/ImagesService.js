@@ -1,4 +1,4 @@
-import _ from 'underscore';
+import imageUtilities from '../utilities/ImageUtilities';
 import Vue from 'vue';
 
 import VueResource from 'vue-resource';
@@ -12,15 +12,19 @@ function get(name) {
     .get({name: name})
     .then(function (res) {
       return res.data.images;
+    })
+    .then(function (images) {
+      return images.map(imageUtilities.enhanceImage)
     });
 }
 
 function getByVersion(name, version) {
   return storedContainersResource
-    .get({name:name, version:version})
+    .get({name: name, version: version})
     .then(function (res) {
       return res.data;
-    });
+    })
+    .then(imageUtilities.enhanceImage);
 }
 
 export default {get, getByVersion}

@@ -9,7 +9,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
 )
 
 func getImagesHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
@@ -23,7 +22,7 @@ func getImagesHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 			return
 		}
 
-		name = fmt.Sprintf("%s/%s", viper.GetString("repository"), name)
+		//name = fmt.Sprintf("%s/%s", viper.GetString("repository"), name)
 		images, err := imageStore.List(name)
 		if err != nil {
 			logErrorFields(err).Warnf("Error retrieving images for %q", name)

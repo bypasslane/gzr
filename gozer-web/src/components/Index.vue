@@ -6,8 +6,8 @@
     <div v-else-if="!error">
       <div class="gzr-cards">
         <div class="flex-row">
-          <div v-for="deployment in list">
-            <deployment-dash-item :deployment="deployment"></deployment-dash-item>
+          <div v-for="group in groupedList">
+            <application-dash-item :deployments="group.deployments" :application-name="group.appName"></application-dash-item>
           </div>
         </div>
       </div>
@@ -30,9 +30,11 @@
   </div>
 </template>
 <script>
-  import { spinner } from 'vue-strap'
+  import {spinner} from 'vue-strap'
   import DeploymentService from '../services/DeploymentService'
-  import DeploymentDashItem from './DeploymentDashItem'
+  import ApplicationDashItem from './ApplicationDashItem'
+  import _ from 'underscore'
+
   export default {
     name: 'index',
     data ()  {
@@ -47,7 +49,20 @@
       DeploymentService
         .list()
         .then(function (list) {
-          vm.list = list;
+          //groupBy returns a hash, that is turned into objects in an array, which is then sorted
+          let grouped = _.chain(list)
+            .groupBy(function (item) {
+              return item.labels.application || "Missing Application Label"
+            })
+            .mapObject(function (val, key) {
+              return {deployments: val, appName: key}
+            })
+            .sortBy(function (item) {
+              return item.appName.toLocaleLowerCase();
+            })
+            .value();
+
+          vm.groupedList = grouped;
         })
         .catch(function (err) {
           vm.error = err;
@@ -57,7 +72,7 @@
         })
     },
     components: {
-      DeploymentDashItem,
+      ApplicationDashItem,
       spinner
     }
   };
