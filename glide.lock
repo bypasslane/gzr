@@ -1,5 +1,5 @@
 hash: 392ced404e3d7732f1da3029620b274b6310040e5092d30eb3b702340f2d4e70
-updated: 2017-04-18T11:43:40.63023975-05:00
+updated: 2017-04-18T14:14:58.459246103-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -57,9 +57,9 @@ imports:
   - log
   - swagger
 - name: github.com/fsnotify/fsnotify
-  version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
+  version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/GeertJohan/go.rice
-  version: 6157c087165faab0591ed97d90215bfac0921b4c
+  version: fbe422beac33c4443570d39dccb4b0c4c914d6ca
   subpackages:
   - embedded
 - name: github.com/ghodss/yaml
@@ -99,7 +99,7 @@ imports:
   - runtime/internal
   - utilities
 - name: github.com/hashicorp/hcl
-  version: 37ab263305aaeb501a60eb16863e808d426e37f2
+  version: 99df0eb941dd8ddbc83d3f3605a34f6a686ac85e
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -121,8 +121,10 @@ imports:
   version: 77ed1c8a01217656d2080ad51981f6e99adaa177
 - name: github.com/kardianos/osext
   version: 9d302b58e975387d0b4d9be876622c86cefe64be
+- name: github.com/kr/fs
+  version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
-  version: 9c47895dc1ce54302908ab8a43385d1f5df2c11c
+  version: 61b492c03cf472e0c6419be5899b8e0dc28b1b88
 - name: github.com/mailru/easyjson
   version: d5b7844b561a7bc640052f1b935f7b800330d7e0
   subpackages:
@@ -136,15 +138,17 @@ imports:
 - name: github.com/meatballhat/negroni-logrus
   version: 7c570a907cfc69cdc004ad506c6f5e234815b936
 - name: github.com/mitchellh/mapstructure
-  version: bfdb1a85537d60bc7e954e600c250219ea497417
+  version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
 - name: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
-  version: 017119f7a78a0b5fc0ea39ef6be09f03acf3345d
+  version: 31055c2ff0bb0c7f9095aec0d220aed21108121e
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/pkg/sftp
+  version: a71e8f580e3b622ebff585309160b1cc549ef4d2
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
@@ -168,19 +172,20 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/spf13/afero
-  version: 2f30b2a92c0e5700bcfe4715891adb1f2a7a406d
+  version: 20500e2abd0d1f4564a499e83d11d6c73cd58c27
   subpackages:
   - mem
+  - sftp
 - name: github.com/spf13/cast
-  version: 24b6558033ffe202bf42f0f3b870dcc798dd2ba8
+  version: e31f36ffc91a2ba9ddb72a4b6a607ff9b3d3cb63
 - name: github.com/spf13/cobra
   version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
 - name: github.com/spf13/jwalterweatherman
   version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
 - name: github.com/spf13/pflag
-  version: 25f8b5b07aece3207895bf19f7ab517eb3b22a40
+  version: 6fd2ff4ff8dfcdf5556fbdc0ac0284408274b1a7
 - name: github.com/spf13/viper
-  version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
+  version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
 - name: github.com/ugorji/go
   version: ded73eae5db7e7a0ef6f55aace87a2873c5d2b74
   subpackages:
@@ -196,6 +201,7 @@ imports:
   subpackages:
   - bcrypt
   - blowfish
+  - ssh
   - ssh/terminal
 - name: golang.org/x/net
   version: f2499483f923065a842d38eb4c7f1927e6fc6e6d
@@ -216,7 +222,7 @@ imports:
   - jws
   - jwt
 - name: golang.org/x/sys
-  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -258,7 +264,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+  version: e4d366fc3c7938e2958e662b4258c7a89e1f0e3e
 - name: k8s.io/client-go
   version: fc49675c2251223623d1a03df9faf0a204ba4752
   subpackages:
