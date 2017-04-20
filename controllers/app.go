@@ -28,10 +28,12 @@ func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore) http.
 	//middleware setup (basically same as classic but uses our logrus for logging)
 
 	recovery := negroni.NewRecovery()
-	loggerMiddleware := negronilogrus.NewCustomMiddleware(log.GetLevel(), &log.JSONFormatter{}, "web")
+	recovery.Logger = log.StandardLogger()
+
+	loggerMiddleware := negronilogrus.NewMiddlewareFromLogger(log.StandardLogger(), "web")
 
 	conf := rice.Config{
-		LocateOrder: []rice.LocateMethod{ rice.LocateAppended, rice.LocateFS},
+		LocateOrder: []rice.LocateMethod{rice.LocateAppended, rice.LocateFS},
 	}
 	static := negroni.NewStatic(conf.MustFindBox("../public").HTTPBox())
 	jsonHeader := middleware.NewContentType()

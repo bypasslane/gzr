@@ -11,6 +11,7 @@ import (
 	"github.com/bypasslane/gzr/controllers"
 	"github.com/spf13/cobra"
 )
+const DefaultWebLogFormat = "json"
 
 // webCmd represents the web command
 var webCmd = &cobra.Command{
@@ -22,7 +23,11 @@ gzr web --port=<CUSTOM_PORT_NUMBER>
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		setNamespace()
-		log.SetFormatter(&log.JSONFormatter{})
+		formatter, err := parseLogFormat(logFormat)
+		if err!=nil{
+			erWithDetails(err, "Invalid formatter specified")
+		}
+		log.SetFormatter(formatter)
 		var connErr error
 		k8sConn, connErr = comms.NewK8sConnection(namespace)
 		if connErr != nil {
@@ -49,6 +54,7 @@ func bindAndRun() {
 func init() {
 	RootCmd.AddCommand(webCmd)
 	webCmd.Flags().IntVarP(&webPort, "port", "p", 9393, "the port to run the Gozer web interface on")
+	webCmd.Flags().StringVar(&logFormat, "log-format", DefaultWebLogFormat, "The log formatter to use - (json | text)")
 	webCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "namespace to look for Deployments in")
 }
 

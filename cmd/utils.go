@@ -17,6 +17,9 @@ var namespace string
 // webPort is the port that the web interface will run on
 var webPort int
 
+var logLevel string
+var logFormat string
+
 // imageStore is the backing for image data storage
 var imageStore comms.GzrMetadataStore
 
