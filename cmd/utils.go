@@ -39,6 +39,7 @@ type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
 
+// erWithDetails prints the error message and the stacktrace if it has one then exits. Should be restricted to CLI usage
 func erWithDetails(err error, msg interface{}) {
 	logEntry := log.WithField("error", err)
 	if err, ok := err.(stackTracer); ok {

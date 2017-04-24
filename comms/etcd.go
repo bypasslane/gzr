@@ -112,7 +112,6 @@ func (store *EtcdStorage) StartTransaction() error {
 // CommitTransaction commits the active transaction
 func (store *EtcdStorage) CommitTransaction() error {
 	_, err := store.activeTxn.Commit()
-	// TODO: Check response for errors
 	return errors.Wrap(err, "Failed to commit transaction to etcd")
 }
 
