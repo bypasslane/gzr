@@ -6,16 +6,24 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/GeertJohan/go.rice"
 	"github.com/bypasslane/gzr/comms"
 )
+
+type mockStaticFileBoxConfig struct {
+}
+
+func (c *mockStaticFileBoxConfig) MustFindBox(boxName string) *rice.Box {
+	return &rice.Box{}
+}
 
 func TestListDeploymentsExist(t *testing.T) {
 	mockK8sConn := &comms.MockK8sCommunicator{
 		OnListDeployments: populatedDeploymentsList,
 	}
 	mockImageStore := &comms.MockStore{}
-
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	mockRiceConfig := &mockStaticFileBoxConfig{}
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := getDeploymentsList(server)
 
@@ -33,8 +41,9 @@ func TestListDeploymentsNone(t *testing.T) {
 		OnListDeployments: emptyDeploymentsList,
 	}
 	mockImageStore := &comms.MockStore{}
+	mockRiceConfig := &mockStaticFileBoxConfig{}
 
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := getDeploymentsList(server)
 
@@ -52,8 +61,9 @@ func TestGetDeploymentFound(t *testing.T) {
 		OnGetDeployment: populatedGetDeployment,
 	}
 	mockImageStore := &comms.MockStore{}
+	mockRiceConfig := &mockStaticFileBoxConfig{}
 
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := getDeployment(server)
 
@@ -71,8 +81,9 @@ func TestGetDeploymentNotFound(t *testing.T) {
 		OnGetDeployment: emptyGetDeployment,
 	}
 	mockImageStore := &comms.MockStore{}
+	mockRiceConfig := &mockStaticFileBoxConfig{}
 
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := getDeployment(server)
 
@@ -91,8 +102,9 @@ func TestUpdateDeploymentAndCountainerFound(t *testing.T) {
 		OnUpdateDeployment: successfulUpdateDeployment,
 	}
 	mockImageStore := &comms.MockStore{}
+	mockRiceConfig := &mockStaticFileBoxConfig{}
 
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := updateDeployment(server)
 
@@ -110,8 +122,9 @@ func TestUpdateDeploymentNotFound(t *testing.T) {
 		OnGetDeployment: emptyGetDeployment,
 	}
 	mockImageStore := &comms.MockStore{}
+	mockRiceConfig := &mockStaticFileBoxConfig{}
 
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := updateDeployment(server)
 
@@ -131,8 +144,9 @@ func TestUpdateContainerNotFound(t *testing.T) {
 		OnUpdateDeployment: failUpdateDeploymentNoContainer,
 	}
 	mockImageStore := &comms.MockStore{}
+	mockRiceConfig := &mockStaticFileBoxConfig{}
 
-	server := httptest.NewServer(App(mockK8sConn, mockImageStore))
+	server := httptest.NewServer(App(mockK8sConn, mockImageStore, mockRiceConfig))
 	defer server.Close()
 	res, err := updateDeployment(server)
 
