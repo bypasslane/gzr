@@ -14,7 +14,8 @@ import (
 	"github.com/urfave/negroni"
 )
 
-
+//Allows for dependency injection of rice.Config,
+// preventing errors during tests when a public folder isn't found
 type staticFileBoxConfig interface {
 	MustFindBox(boxName string)(*rice.Box)
 }
