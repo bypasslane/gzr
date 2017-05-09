@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"os"
 
+	"k8s.io/client-go/tools/clientcmd"
+
 	"github.com/bypasslane/gzr/comms"
 	"github.com/spf13/cobra"
 )
 
 // Package-global k8s connection
 var k8sConn *comms.K8sConnection
+
+// originalContext to keep track of original context
+var originalContext string
+
+// changedContext keeps track of if the context was changed
+var changedContext bool
 
 // deploymentsCmd represents the deployments command
 var deploymentsCmd = &cobra.Command{
@@ -22,11 +30,30 @@ deployments get <DEPLOYMENT NAME>
 deployments update <DEPLOYMENT_NAME> <CONTAINER_NAME> <IMAGE>
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		changedContext = false
+		cli, err := clientcmd.LoadFromFile(clientcmd.RecommendedHomeFile)
+		if err != nil {
+			er("Cannot load ~/.kube/config")
+		}
+		currentContext := cli.CurrentContext
+		originalContext = currentContext
+		// If a context was set from a flag and it's different than currentContext,
+		// swap them for the duration of the command
+		if currentContext != context && context != "" {
+			changeContext(context)
+			changedContext = true
+		}
+		setNamespace(cli)
 		var connErr error
 		k8sConn, connErr = comms.NewK8sConnection(namespace)
 		if connErr != nil {
 			// TODO: figure out the Cobra way to handle this
 			erWithDetails(connErr, "problem establishing k8s connection")
+		}
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if changedContext {
+			changeContext(originalContext)
 		}
 	},
 }
@@ -114,7 +141,8 @@ func listDeploymentsHandler() {
 }
 
 func init() {
-	deploymentsCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "namespace to look for Deployments in")
+	deploymentsCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to look for Deployments in")
+	deploymentsCmd.PersistentFlags().StringVarP(&context, "context", "c", "", "context to look for Deployments in")
 	deploymentsCmd.AddCommand(deploymentsListCmd)
 	deploymentsCmd.AddCommand(deploymentGetCmd)
 	deploymentsCmd.AddCommand(deploymentUpdateCmd)

@@ -3,6 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+
+	"k8s.io/client-go/tools/clientcmd/api"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/bypasslane/gzr/comms"
@@ -13,6 +16,9 @@ import (
 
 // Flag var for holding namespace info
 var namespace string
+
+// Flag var for holding context info
+var context string
 
 // webPort is the port that the web interface will run on
 var webPort int
@@ -82,4 +88,27 @@ func setupImageStore() {
 		erWithDetails(err, "Failed to initialize store")
 	}
 	imageStore = newStore
+}
+
+// setNamespace checks the current context in k8's config if one has not been passed into
+// the command
+func setNamespace(cli *api.Config) {
+	if namespace == "" { // If it's set from the flag, don't do anything
+		currentNamespace := cli.Contexts[cli.CurrentContext].Namespace
+		if currentNamespace != "" { // If it's set in the context, set it
+			namespace = currentNamespace
+		} else {
+			namespace = "default"
+		}
+	}
+}
+
+// changeContext actually calls `kubectl config use-context <context>` in order
+// to change the context of the local kubernetes config
+func changeContext(context string) {
+	ctxCmd := exec.Command("kubectl", "config", "use-context", context)
+	err := ctxCmd.Run()
+	if err != nil {
+		er(err)
+	}
 }
