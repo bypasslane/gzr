@@ -22,7 +22,6 @@ func getImagesHandler(imageStore comms.GzrMetadataStore) http.HandlerFunc {
 			return
 		}
 
-		//name = fmt.Sprintf("%s/%s", viper.GetString("repository"), name)
 		images, err := imageStore.List(name)
 		if err != nil {
 			logErrorFields(err).Warnf("Error retrieving images for %q", name)
