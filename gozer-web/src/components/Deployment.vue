@@ -55,7 +55,9 @@
         <div class="col-md-4 col-md-offset-4 col-xs-10 col-xs-offset-1">
           <div class="media">
             <div class="media-left media-middle">
-              <img src="../img/sad_stay_puft.png" class="media-object">
+              <div class="media-object" style="width: 300px">
+                <div style="width:100%;height:0;padding-bottom:55%;position:relative;"><iframe src="http://tv.giphy.com/sad" width="100%" height="100%" style="position:absolute" frameBorder="0" class="giphy-embed"></iframe></div>
+              </div>
             </div>
             <div class="media-body media-middle">
               <h3 class="media-heading">Gozer Error</h3>
