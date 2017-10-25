@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bypasslane/boxedRice"
 	log "github.com/Sirupsen/logrus"
+	"github.com/bypasslane/boxedRice"
 	"github.com/bypasslane/gzr/comms"
 	"github.com/bypasslane/gzr/middleware"
 	"github.com/gorilla/mux"
@@ -14,19 +14,20 @@ import (
 	"github.com/urfave/negroni"
 )
 
-//Allows for dependency injection of boxedRice.Config,
+// Allows for dependency injection of boxedRice.Config,
 // preventing errors during tests when a public folder isn't found
 type staticFileBoxConfig interface {
-	MustFindBox(boxName string)(*boxedRice.Box)
+	MustFindBox(boxName string) *boxedRice.Box
 }
 
-func App(k8sConn comms.K8sCommunicator, imageStore comms.GzrMetadataStore, boxedRiceConfig staticFileBoxConfig) http.Handler {
+// App builds our web router/handler
+func App(k8sComm comms.K8sCommunicator, imageStore comms.GzrMetadataStore, boxedRiceConfig staticFileBoxConfig) http.Handler {
 	router := mux.NewRouter().StrictSlash(true).UseEncodedPath()
 
 	router.HandleFunc("/", homeHandler).Methods("GET")
-	router.HandleFunc("/deployments", listDeploymentsHandler(k8sConn)).Methods("GET")
-	router.HandleFunc("/deployments/{name}", getDeploymentHandler(k8sConn)).Methods("GET")
-	router.HandleFunc("/deployments/{name}", updateDeploymentHandler(k8sConn)).Methods("PUT")
+	router.HandleFunc("/deployments", listDeploymentsHandler(k8sComm)).Methods("GET")
+	router.HandleFunc("/deployments/{name}", getDeploymentHandler(k8sComm)).Methods("GET")
+	router.HandleFunc("/deployments/{name}", updateDeploymentHandler(k8sComm)).Methods("PUT")
 
 	router.HandleFunc("/images/{name}", getImagesHandler(imageStore)).Methods("GET")
 	router.HandleFunc("/images/{name}/{version}", getImageHandler(imageStore)).Methods("GET")

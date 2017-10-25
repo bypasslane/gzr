@@ -1,202 +1,124 @@
 package comms
 
 import (
+	"context"
 	"encoding/json"
 	e "errors"
 	"fmt"
+	"html/template"
 	"io"
+	"io/ioutil"
 	"os"
-	"text/template"
 
+	"github.com/ericchiang/k8s"
+	"github.com/ericchiang/k8s/apis/extensions/v1beta1"
+	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
-	ErrContainerNotFound        = e.New("Requested container couldn't be found")
 	ErrDeploymentNotFound       = e.New("Requested deployment couldn't be found")
 	ErrNoDeploymentsInNamespace = e.New("No deployments found in specified namespace")
 )
 
-// GzrDeployment is just here to let us declare methods on k8s Deployments
-type GzrDeployment v1beta1.Deployment
-
-// GzrDeploymentList is a collection of GzrDeployments
-type GzrDeploymentList struct {
-	Deployments []GzrDeployment `json:"deployments"`
-}
-
-// Serializer knows how to serialize for web (JSON) and CLI (templatized strings)
-type Serializer interface {
-	// SerializeForCLI writes templatized information to the provided io.Writer
-	SerializeForCLI(io.Writer) error
-	// SerializeForWire kicks out JSON as a byte slice
-	SerializeForWire() ([]byte, error)
-}
-
-// DeploymentContainerInfo holds information about a Deployment sufficient for updating a Pod's container by name
-type DeploymentContainerInfo struct {
-	// Namespace is the Deployment's k8s namespace
-	Namespace string
-	// DeploymentName is the name of the Deployment
-	DeploymentName string
-	// ContainerName is the name of a Pod's container in the Deployment spec
-	ContainerName string
-	// Image is the name of the image (current or intended) for the container identified by ContainerName
-	Image string
+// K8sClient is a wrapper around the *k8s.Client
+type K8sClient struct {
+	K *k8s.Client
 }
 
 // K8sCommunicator defines an interface for retrieving data from a k8s cluster
 type K8sCommunicator interface {
 	// ListDeployments returns the list of Deployments in the cluster
-	ListDeployments() (*GzrDeploymentList, error)
+	ListDeployments() (*v1beta1.DeploymentList, error)
 	// GetDeployment returns the Deployment matching the given name
-	GetDeployment(string) (*GzrDeployment, error)
+	GetDeployment(string) (*v1beta1.Deployment, error)
 	// UpdateDeployment updates the Deployment's container in the manner specified by the argument
-	UpdateDeployment(*DeploymentContainerInfo) (*GzrDeployment, error)
-	// GetNamespace returns the namespace
-	GetNamespace() string
+	UpdateDeployment(*v1beta1.Deployment) (*v1beta1.Deployment, error)
 }
 
-// K8sConnection implements the K8sCommunicator interface and holds a live connection to a k8s cluster
-type K8sConnection struct {
-	// clientset is a collection of Kubernetes API clients
-	clientset *kubernetes.Clientset
-	// namespace is the k8s namespace active for this connection used to talk
-	namespace string
-}
+// NewK8sClient returns an in-cluster K8sClient, if gzr is ran from outside of a K8's cluster it
+// falls back to looking at users kube config.
+func NewK8sClient() (*K8sClient, error) {
+	client := new(K8sClient)
+	k, err := k8s.NewInClusterClient()
 
-// NewK8sConnection returns a K8sConnection with an active v1.Clientset.
-//   - assumes that $HOME/.kube/config contains a legit Kubernetes config for an healthy k8s cluster.
-//   - panics if the configuration can't be used to connect to a k8s cluster.
-func NewK8sConnection(namespace string) (*K8sConnection, error) {
-	var k *K8sConnection
-	kubeconfig := fmt.Sprintf("%s/.kube/config", os.Getenv("HOME"))
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	// https://github.com/ericchiang/k8s/blob/master/client.go#L251
+	// Currently there aren't any error types to check against, without warning the user we try to
+	// create a client using kube config when in-cluster client creation fails
 	if err != nil {
-		panic(err.Error())
+		kubeconfigPath := fmt.Sprintf("%s/.kube/config", os.Getenv("HOME"))
+		data, err := ioutil.ReadFile(kubeconfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("read kubeconfig: %v", err)
+		}
+
+		// Unmarshal YAML into a Kubernetes config object.
+		var config k8s.Config
+		if err := yaml.Unmarshal(data, &config); err != nil {
+			return nil, fmt.Errorf("unmarshal kubeconfig: %v", err)
+		}
+		k, err = k8s.NewClient(&config)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-
-	if err != nil {
-		return k, err
-	}
-
-	k = &K8sConnection{
-		clientset: clientset,
-		namespace: namespace,
-	}
-
-	return k, nil
+	client.K = k
+	return client, nil
 }
 
-// GetDeployment returns a GzrDeployment matching the deploymentName in the given namespace
-func (k *K8sConnection) GetDeployment(deploymentName string) (*GzrDeployment, error) {
-	var gd *GzrDeployment
-	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).Get(deploymentName, v1.GetOptions{})
+// GetDeployment returns a v1beta1.Deployment matching the deploymentName in current namespace
+func (client *K8sClient) GetDeployment(deploymentName string) (*v1beta1.Deployment, error) {
+	deployment, err := client.K.ExtensionsV1Beta1().GetDeployment(context.Background(), deploymentName, client.K.Namespace)
 	if err != nil {
-		return gd, errors.Wrapf(err, "Failed to get deployment %q in namespace %q", deployment, k.GetNamespace())
+		return nil, errors.Wrapf(err, "Failed to get deployment %q in namespace %q", deploymentName, client.K.Namespace)
 	}
-	gdp := GzrDeployment(*deployment)
-	gd = &gdp
-
-	return gd, err
+	return deployment, err
 }
 
-// GetNamespace returns the namespace for the connection
-func (k *K8sConnection) GetNamespace() string {
-	return k.namespace
+// ListDeployments returns a list of Deployments in current namespace
+func (client *K8sClient) ListDeployments() (*v1beta1.DeploymentList, error) {
+	deploymentList, err := client.K.ExtensionsV1Beta1().ListDeployments(context.Background(), client.K.Namespace)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to list deployments in namespace %q", client.K.Namespace)
+	}
+	return deploymentList, err
 }
 
 // UpdateDeployment updates a Deployment on the server to the structure represented by the argument
 // TODO: verify that requested image exists in the store
 // TODO: verify that requested image exists in the registry
-func (k *K8sConnection) UpdateDeployment(dci *DeploymentContainerInfo) (*GzrDeployment, error) {
-	var gd *GzrDeployment
-	var containerIndex int
-	found := false
-
-	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.namespace).Get(dci.DeploymentName, v1.GetOptions{})
+func (client *K8sClient) UpdateDeployment(newDeployment *v1beta1.Deployment) (*v1beta1.Deployment, error) {
+	deployment, err := client.K.ExtensionsV1Beta1().GetDeployment(context.Background(), *newDeployment.Metadata.Name, client.K.Namespace)
 	// no Name in ObjectMeta means it was returned empty
-	if deployment.ObjectMeta.Name == "" {
-		return gd, errors.WithStack(ErrDeploymentNotFound)
+	if *deployment.Metadata.Name == "" {
+		return deployment, errors.WithStack(ErrDeploymentNotFound)
 	}
 
-	for index, container := range deployment.Spec.Template.Spec.Containers {
-		if container.Name == dci.ContainerName {
-			containerIndex = index
-			found = true
-		}
-	}
-
-	if !found {
-		return gd, errors.WithStack(ErrContainerNotFound)
-	}
-
-	deployment.Spec.Template.Spec.Containers[containerIndex].Image = dci.Image
-	deployment, err = k.clientset.ExtensionsV1beta1().Deployments(dci.Namespace).Update(deployment)
+	deployment, err = client.K.ExtensionsV1Beta1().UpdateDeployment(context.Background(), newDeployment)
 
 	if err != nil {
-		return gd, errors.Wrap(err, "Failed to update deployment")
+		return deployment, errors.Wrap(err, "Failed to update deployment")
 	}
 
-	gdp := GzrDeployment(*deployment)
-	gd = &gdp
-
-	return gd, nil
+	return deployment, nil
 }
 
-// ListDeployments returns the active k8s Deployments for the given namespace
-func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
-	var gzrDeploymentList GzrDeploymentList
-	deploymentList, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).List(v1.ListOptions{})
-	if err != nil {
-		return &gzrDeploymentList, errors.Wrapf(err, "Failed to get list of deployments in namespace %q", k.GetNamespace())
-	}
-
-	if len(deploymentList.Items) == 0 {
-		return nil, errors.WithStack(ErrNoDeploymentsInNamespace)
-	}
-
-	for _, deployment := range deploymentList.Items {
-		gzrDeploymentList.Deployments = append(gzrDeploymentList.Deployments, GzrDeployment(deployment))
-	}
-
-	return &gzrDeploymentList, nil
-}
-
-// SerializeForCLI takes an io.Writer and writes templatized data to it representing a Deployment
-func (d GzrDeployment) SerializeForCLI(wr io.Writer) error {
-	return errors.Wrap(d.cliTemplate().Execute(wr, d), "Failed to serialize deployment ")
-}
-
-// cliTemplate returns the template that will be used for serializing Deployment data for display in the CLI
-func (d GzrDeployment) cliTemplate() *template.Template {
+// SerializeDeployForCLI takes an io.Writer and writes templatized data to it representing a Deployment
+func SerializeDeployForCLI(deploy *v1beta1.Deployment, wr io.Writer) error {
 	t := template.New("Deployment CLI")
 	t, _ = t.Parse(`-------------------------
-Deployment: {{.ObjectMeta.Name}}
+Deployment: {{.Metadata.Name}}
   - replicas: {{.Spec.Replicas}}
   - containers: {{range .Spec.Template.Spec.Containers}}
     --name:  {{.Name}}
     --image: {{.Image}}
 {{end}}
 `)
-	return t
+	return errors.Wrap(t.Execute(wr, deploy), "Failed to serialize deployment ")
 }
 
-// SerializeForWire returns a JSON representation of the Deployment
-func (d GzrDeployment) SerializeForWire() ([]byte, error) {
-	data, err := json.Marshal(d)
-	return data, errors.Wrap(err, "Failed to convert deployment to json")
-}
-
-// SerializeForWire returns a JSON representation of the DeploymentList
-func (dl *GzrDeploymentList) SerializeForWire() ([]byte, error) {
-	data, err := json.Marshal(dl)
-	return data, errors.Wrap(err, "Failed to convert deployment list to json")
+// SerializeForWire returns a JSON representation of the obj
+func SerializeForWire(obj interface{}) ([]byte, error) {
+	data, err := json.Marshal(obj)
+	return data, errors.Wrap(err, "Failed to convert object to json")
 }

@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/bypasslane/gzr/comms"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/ericchiang/k8s/apis/extensions/v1beta1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -19,9 +21,9 @@ type UpdateDeploymentUserType struct {
 }
 
 // listDeploymentsHandler lists deployments in the Kubernetes instance
-func listDeploymentsHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
+func listDeploymentsHandler(k8sComm comms.K8sCommunicator) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		deployments, err := k8sConn.ListDeployments()
+		deployments, err := k8sComm.ListDeployments()
 		// TODO: differentiate between legit errors and unhandleable errors
 		if err != nil {
 			logErrorFields(err).Error("Unable to list deployments")
@@ -36,7 +38,7 @@ func listDeploymentsHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 			return
 		}
 
-		jsonData, err := deployments.SerializeForWire()
+		jsonData, err := comms.SerializeForWire(deployments)
 
 		if err != nil {
 			logErrorFields(err).Error("Error serializing for wire")
@@ -50,7 +52,7 @@ func listDeploymentsHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 }
 
 // getDeploymentHandler gets a single Deployment by name from the Kubernetes instance
-func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
+func getDeploymentHandler(k8sComm comms.K8sCommunicator) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
@@ -59,7 +61,7 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("name param required for this path"))
 		}
-		deployment, err := k8sConn.GetDeployment(name)
+		deployment, err := k8sComm.GetDeployment(name)
 
 		if errors.Cause(err) == comms.ErrDeploymentNotFound {
 			logErrorFields(err).Warnf("Deployment not found for %q", name)
@@ -70,7 +72,7 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 
 		// TODO: catch other kinds of errors
 
-		jsonData, err := deployment.SerializeForWire()
+		jsonData, err := comms.SerializeForWire(deployment)
 
 		if err != nil {
 			logErrorFields(err).Error("Error serializng for wire")
@@ -83,18 +85,19 @@ func getDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 	})
 }
 
-// updateDeploymentHandler updates a specific container on a single Deployment to a given image
-func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
+// updateDeploymentHandler updates a specific container on a single Deployment
+func updateDeploymentHandler(k8sComm comms.K8sCommunicator) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
-		var deployment *comms.GzrDeployment
+		var deployment *v1beta1.Deployment
+		var foundContainer bool
 		name := mux.Vars(r)["name"]
 
 		if name == "" {
 			log.Warn("name param required for this path")
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		deployment, err = k8sConn.GetDeployment(name)
+		deployment, err = k8sComm.GetDeployment(name)
 
 		if errors.Cause(err) == comms.ErrDeploymentNotFound {
 			logErrorFields(err).Warn("Error getting deployment")
@@ -115,17 +118,22 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 			return
 		}
 
-		deployment, err = k8sConn.UpdateDeployment(userData.convertToDeploymentContainerInfo(k8sConn.GetNamespace(), name))
-
-		// TODO: more fine-grained error reporting
-		if errors.Cause(err) == comms.ErrContainerNotFound {
-			logErrorFields(err).Warn("Conatiner not found")
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(err.Error()))
-			return
+		for containerIndex, container := range deployment.Spec.Template.Spec.Containers {
+			if *container.Name == userData.ContainerName {
+				foundContainer = true
+				*deployment.Spec.Template.Spec.Containers[containerIndex].Image = userData.Image
+				break
+			}
+		}
+		if !foundContainer {
+			logErrorFields(err).Warn("Could not find container with name %q", userData.ContainerName)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("Could not find container with name %q", userData.ContainerName)))
 		}
 
-		jsonData, err := deployment.SerializeForWire()
+		deployment, err = k8sComm.UpdateDeployment(deployment)
+
+		jsonData, err := comms.SerializeForWire(deployment)
 
 		// TODO: more fine-grained error reporting
 		if err != nil {
@@ -137,14 +145,4 @@ func updateDeploymentHandler(k8sConn comms.K8sCommunicator) http.HandlerFunc {
 
 		w.Write(jsonData)
 	})
-}
-
-// convertToDeploymentContainerInfo creates a DeploymentContainerInfo struct
-func (updateData *UpdateDeploymentUserType) convertToDeploymentContainerInfo(namespace string, deploymentName string) *comms.DeploymentContainerInfo {
-	return &comms.DeploymentContainerInfo{
-		Namespace:      namespace,
-		DeploymentName: deploymentName,
-		ContainerName:  updateData.ContainerName,
-		Image:          updateData.Image,
-	}
 }

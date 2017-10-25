@@ -32,7 +32,7 @@ function transformDeploymentToViewObj(deployment) {
 
 function list() {
   return deploymentsResource.get().then(function (response) {
-    return response.data.deployments.map(transformDeploymentToViewObj)
+    return response.data.items.map(transformDeploymentToViewObj)
   });
 }
 

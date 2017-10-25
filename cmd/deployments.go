@@ -9,7 +9,7 @@ import (
 )
 
 // Package-global k8s connection
-var k8sConn *comms.K8sConnection
+var k8sClient *comms.K8sClient
 
 // deploymentsCmd represents the deployments command
 var deploymentsCmd = &cobra.Command{
@@ -22,11 +22,11 @@ deployments get <DEPLOYMENT NAME>
 deployments update <DEPLOYMENT_NAME> <CONTAINER_NAME> <IMAGE>
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		var connErr error
-		k8sConn, connErr = comms.NewK8sConnection(namespace)
-		if connErr != nil {
+		var err error
+		k8sClient, err = comms.NewK8sClient()
+		if err != nil {
 			// TODO: figure out the Cobra way to handle this
-			erWithDetails(connErr, "problem establishing k8s connection")
+			erWithDetails(err, "problem establishing k8s connection")
 		}
 	},
 }
@@ -73,48 +73,60 @@ deployments update mah-deployment some-pod-container coolthing:latest
 		if len(args) < 3 {
 			erBadUsage("Not enough arguments", cmd)
 		}
-		updateDeploymentHandler(namespace, args[0], args[1], args[2])
+		updateDeploymentHandler(args[0], args[1], args[2])
 	},
 }
 
 // updateDeploymentHandler updates a Deployment container with the info described by the DeploymentContainerInfo argument
-func updateDeploymentHandler(namespace string, deploymentName string, containerName string, image string) {
-	dci := &comms.DeploymentContainerInfo{
-		Namespace:      namespace,
-		DeploymentName: deploymentName,
-		ContainerName:  containerName,
-		Image:          image,
+func updateDeploymentHandler(deploymentName string, containerName string, image string) {
+	var foundContainer bool
+
+	deployment, err := k8sClient.GetDeployment(deploymentName)
+	if err != nil {
+		erWithDetails(err, fmt.Sprintf("There was a problem retrieving deployment %q", deploymentName))
 	}
-	deployment, err := k8sConn.UpdateDeployment(dci)
+
+	for containerIndex, container := range deployment.Spec.Template.Spec.Containers {
+		if *container.Name == containerName {
+			foundContainer = true
+			*deployment.Spec.Template.Spec.Containers[containerIndex].Image = image
+			break
+		}
+	}
+	if !foundContainer {
+		erWithDetails(err, fmt.Sprintf("Could not find container with name %q", containerName))
+	}
+
+	deployment, err = k8sClient.UpdateDeployment(deployment)
 
 	if err != nil {
 		erWithDetails(err, fmt.Sprintf("There was a problem updating container %q on deployment %q", containerName, deploymentName))
 	}
-	deployment.SerializeForCLI(os.Stdout)
+
+	comms.SerializeDeployForCLI(deployment, os.Stdout)
 }
 
 // getDeploymentHandler fetches
 func getDeploymentHandler(deploymentName string) {
-	deployment, err := k8sConn.GetDeployment(deploymentName)
+	deployment, err := k8sClient.GetDeployment(deploymentName)
 	if err != nil {
 		erWithDetails(err, fmt.Sprintf("There was a problem retrieving deployment %q", deploymentName))
 	}
-	deployment.SerializeForCLI(os.Stdout)
+	comms.SerializeDeployForCLI(deployment, os.Stdout)
 }
 
 // listDeploymentsHandler fetches Deployments and prints them to the CLI
 func listDeploymentsHandler() {
-	dlist, err := k8sConn.ListDeployments()
+	dlist, err := k8sClient.ListDeployments()
 	if err != nil {
 		erWithDetails(err, "Error retrieving deployments")
 	}
-	for _, deployment := range dlist.Deployments {
-		deployment.SerializeForCLI(os.Stdout)
+	for _, deployment := range dlist.GetItems() {
+		comms.SerializeDeployForCLI(deployment, os.Stdout)
 	}
 }
 
 func init() {
-	deploymentsCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "namespace to look for Deployments in")
 	deploymentsCmd.AddCommand(deploymentsListCmd)
 	deploymentsCmd.AddCommand(deploymentGetCmd)
 	deploymentsCmd.AddCommand(deploymentUpdateCmd)

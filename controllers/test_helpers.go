@@ -6,34 +6,31 @@ import (
 	"strings"
 
 	"github.com/bypasslane/gzr/comms"
+	"github.com/ericchiang/k8s/apis/extensions/v1beta1"
 )
 
-func emptyDeploymentsList() (*comms.GzrDeploymentList, error) {
+func emptyDeploymentsList() (**v1beta1.DeploymentList, error) {
 	return nil, nil
 }
 
-func populatedDeploymentsList() (*comms.GzrDeploymentList, error) {
-	return &comms.GzrDeploymentList{}, nil
+func populatedDeploymentsList() (*v1beta1.DeploymentList, error) {
+	return &v1beta1.DeploymentList{}, nil
 }
 
-func emptyGetDeployment(deploymentName string) (*comms.GzrDeployment, error) {
+func emptyGetDeployment(deploymentName string) (*v1beta1.Deployment, error) {
 	return nil, comms.ErrDeploymentNotFound
 }
 
-func populatedGetDeployment(deploymentName string) (*comms.GzrDeployment, error) {
-	return &comms.GzrDeployment{}, nil
+func populatedGetDeployment(deploymentName string) (*v1beta1.Deployment, error) {
+	return &v1beta1.Deployment{}, nil
 }
 
-func successfulUpdateDeployment(dci *comms.DeploymentContainerInfo) (*comms.GzrDeployment, error) {
-	return &comms.GzrDeployment{}, nil
+func successfulUpdateDeployment(newDeployment *v1beta1.Deployment) (*v1beta1.Deployment, error) {
+	return &v1beta1.Deployment{}, nil
 }
 
-func failUpdateDeploymentNoDeployment(dci *comms.DeploymentContainerInfo) (*comms.GzrDeployment, error) {
-	return &comms.GzrDeployment{}, comms.ErrDeploymentNotFound
-}
-
-func failUpdateDeploymentNoContainer(dci *comms.DeploymentContainerInfo) (*comms.GzrDeployment, error) {
-	return &comms.GzrDeployment{}, comms.ErrContainerNotFound
+func failUpdateDeploymentNoDeployment(newDeployment *v1beta1.Deployment) (*v1beta1.Deployment, error) {
+	return &v1beta1.Deployment{}, comms.ErrDeploymentNotFound
 }
 
 // Sends an HTTP request to provided server:

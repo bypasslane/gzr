@@ -1,8 +1,8 @@
-FROM golang:1.8-alpine
+FROM golang:1.9-alpine
 
 WORKDIR /go/src/github.com/bypasslane/gzr
 RUN apk update && \
-    apk add git nodejs make ca-certificates && \
+    apk add git nodejs nodejs-npm yarn make ca-certificates && \
     update-ca-certificates && \
     git config --global url."https://".insteadOf git:// && \
     git config --global url."https://".insteadOf ssh:// && \

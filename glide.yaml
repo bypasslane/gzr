@@ -6,8 +6,6 @@ import:
   version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
 - package: github.com/spf13/viper
   version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
-- package: k8s.io/client-go
-  version: 99c1992389642cae4f41b931eca21827f9cc35b7
 - package: github.com/gorilla/mux
   version: bcd8bc72b08df0f70df986b97f95590779502d31
 - package: github.com/urfave/negroni
@@ -32,3 +30,9 @@ import:
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - package: github.com/bypasslane/boxedRice
   version: af9beabff7eebd726c0106cd911149dc6ca7a3b0
+- package: github.com/ericchiang/k8s
+  version: ^0.4.0
+- package: github.com/fsnotify/fsnotify
+  version: ~1.4.2
+- package: github.com/ghodss/yaml
+  version: ^1.0.0
