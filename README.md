@@ -1,5 +1,7 @@
 # gzr
 
+![Build Status](https://api.travis-ci.org/bypasslane/gzr.svg?branch=master)
+
 *"Gozer"*
 
 The missing (web or CLI) tool for your (containerized) microservices SDLC

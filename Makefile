@@ -12,7 +12,7 @@ build:
 	go build -i -o gzr
 
 build_web: build
-	cd gozer-web; npm i -g webpack; npm i; npm run build;
+	cd gozer-web; yarn global add webpack; yarn; yarn build;
 	boxedRice append -b=public --exec=./gzr
 
 install_build_deps:
