@@ -1,12 +1,4 @@
 node('default') {
-  stage('Test CLI') {
-    deleteDir()
-    checkout scm
-    sh './ci/test-cli.sh'
-  }
-  stage('Test Web') {
-    sh './ci/test-web.sh'
-  }
   stage('Build CLI') {
     sh './ci/build.sh'
   }

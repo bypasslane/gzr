@@ -1,0 +1,12 @@
+language: go
+go:
+- 1.9
+stages:
+  - test-cli
+  - test-web
+jobs:
+  include:
+    - stage: test-cli
+      script: bash ./ci/test-cli.sh
+    - stage: test-web
+      script: bash ./ci/test-web.sh
