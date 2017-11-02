@@ -23,7 +23,7 @@ deployments update <DEPLOYMENT_NAME> <CONTAINER_NAME> <IMAGE>
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var connErr error
-		k8sConn, connErr = comms.NewK8sConnection(namespace)
+		k8sConn, connErr = comms.NewK8sConnection()
 		if connErr != nil {
 			// TODO: figure out the Cobra way to handle this
 			erWithDetails(connErr, "problem establishing k8s connection")
@@ -114,7 +114,6 @@ func listDeploymentsHandler() {
 }
 
 func init() {
-	deploymentsCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "namespace to look for Deployments in")
 	deploymentsCmd.AddCommand(deploymentsListCmd)
 	deploymentsCmd.AddCommand(deploymentGetCmd)
 	deploymentsCmd.AddCommand(deploymentUpdateCmd)
