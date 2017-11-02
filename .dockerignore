@@ -4,3 +4,6 @@ gozer-web/node_modules/
 vendor/
 public/
 Jenkinsfile
+.travis.yml
+chart/
+draft.toml
