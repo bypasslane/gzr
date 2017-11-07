@@ -7,7 +7,7 @@ import:
 - package: github.com/spf13/viper
   version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
 - package: k8s.io/client-go
-  version: 99c1992389642cae4f41b931eca21827f9cc35b7
+  version: ^4.0.0
 - package: github.com/gorilla/mux
   version: bcd8bc72b08df0f70df986b97f95590779502d31
 - package: github.com/urfave/negroni

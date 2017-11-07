@@ -71,20 +71,41 @@ type K8sConnection struct {
 }
 
 // NewK8sConnection returns a K8sConnection with an active v1.Clientset.
-//   - assumes that $HOME/.kube/config contains a legit Kubernetes config for an healthy k8s cluster.
-//   - panics if the configuration can't be used to connect to a k8s cluster.
-func NewK8sConnection(namespace string) (*K8sConnection, error) {
+//   - assumes gzr is running in a Kubernetes cluster
+//   - looks at $HOME/.kube/config for kubeconfig, falls back to inclusterconfig if file missing
+//   - panics if neither configuration can be used to connect to a k8s cluster.
+func NewK8sConnection() (*K8sConnection, error) {
 	var k *K8sConnection
-	kubeconfig := fmt.Sprintf("%s/.kube/config", os.Getenv("HOME"))
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	var kubeconfig string
+	kubeconfigPath := fmt.Sprintf("%s/.kube/config", os.Getenv("HOME"))
+
+	if _, err := os.Stat(kubeconfigPath); !os.IsNotExist(err) {
+		kubeconfig = kubeconfigPath
+	}
+
+	// BuildConfigFromFlags will fall back to inClusterConfig if kubeconfig is empty
+	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+
 	if err != nil {
 		panic(err.Error())
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(restConfig)
 
 	if err != nil {
 		return k, err
+	}
+
+	// Stand up a ClientConfig to get Namespace from
+	rules := clientcmd.NewDefaultClientConfigLoadingRules()
+	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
+
+	overrides := &clientcmd.ConfigOverrides{}
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+	namespace, _, err := clientConfig.Namespace()
+
+	if err != nil {
+		panic(err.Error())
 	}
 
 	k = &K8sConnection{
@@ -98,9 +119,9 @@ func NewK8sConnection(namespace string) (*K8sConnection, error) {
 // GetDeployment returns a GzrDeployment matching the deploymentName in the given namespace
 func (k *K8sConnection) GetDeployment(deploymentName string) (*GzrDeployment, error) {
 	var gd *GzrDeployment
-	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).Get(deploymentName, v1.GetOptions{})
+	deployment, err := k.clientset.ExtensionsV1beta1().Deployments(k.namespace).Get(deploymentName, v1.GetOptions{})
 	if err != nil {
-		return gd, errors.Wrapf(err, "Failed to get deployment %q in namespace %q", deployment, k.GetNamespace())
+		return gd, errors.Wrapf(err, "Failed to get deployment %q in namespace %q", deployment, k.namespace)
 	}
 	gdp := GzrDeployment(*deployment)
 	gd = &gdp
@@ -154,9 +175,9 @@ func (k *K8sConnection) UpdateDeployment(dci *DeploymentContainerInfo) (*GzrDepl
 // ListDeployments returns the active k8s Deployments for the given namespace
 func (k *K8sConnection) ListDeployments() (*GzrDeploymentList, error) {
 	var gzrDeploymentList GzrDeploymentList
-	deploymentList, err := k.clientset.ExtensionsV1beta1().Deployments(k.GetNamespace()).List(v1.ListOptions{})
+	deploymentList, err := k.clientset.ExtensionsV1beta1().Deployments(k.namespace).List(v1.ListOptions{})
 	if err != nil {
-		return &gzrDeploymentList, errors.Wrapf(err, "Failed to get list of deployments in namespace %q", k.GetNamespace())
+		return &gzrDeploymentList, errors.Wrapf(err, "Failed to get list of deployments in namespace %q", k.namespace)
 	}
 
 	if len(deploymentList.Items) == 0 {
