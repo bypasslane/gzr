@@ -50,6 +50,7 @@ We needed an easy way to manage deployments in a variety of contexts, thinking i
 * go
 * glide
 * kubectl
+* kubernetes server 1.7 (Using kubernetes/client-go client, release 4.0. [Compatability](https://github.com/kubernetes/client-go/blob/master/README.md#compatibility-matrix) )
  
 ### Structure
 `gzr` is a CLI tool written with Cobra. It has a `web` 
