@@ -12,10 +12,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
 var (
 	ErrContainerNotFound        = e.New("Requested container couldn't be found")
 	ErrDeploymentNotFound       = e.New("Requested deployment couldn't be found")
