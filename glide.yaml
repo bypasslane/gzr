@@ -1,13 +1,12 @@
 package: github.com/bypasslane/gzr
 import:
 - package: github.com/golang/protobuf
-  version: 6a1fa9404c0aebf36c879bc50152edcc953910d2
 - package: github.com/spf13/cobra
   version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
 - package: github.com/spf13/viper
   version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
 - package: k8s.io/client-go
-  version: ^4.0.0
+  version: v6.0.0
 - package: github.com/gorilla/mux
   version: bcd8bc72b08df0f70df986b97f95590779502d31
 - package: github.com/urfave/negroni
